@@ -1,0 +1,1229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="PulseGuard: predictive maintenance for EV charging networks. MBA venture prototype by Harmonic Tribe.">
+<title>PulseGuard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&family=Geist+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: enterprise SaaS. Marketing site in a 1180px column; console is a fixed sidebar + scrolling workspace. */
+:root{
+  --bg:#F6F7F9; --panel:#FFFFFF; --subtle:#F0F2F5; --line:#E2E6EB; --line-2:#D3D9E0;
+  --ink:#0B1220; --ink-2:#364152; --muted:#687384;
+  --brand:#1F4FD6; --brand-ink:#FFFFFF; --brand-soft:#ECF1FD; --brand-line:#C9D6F8;
+  --good:#11804E; --good-soft:#E7F5EE; --warn:#A86400; --warn-soft:#FBF1E1; --crit:#C42F2B; --crit-soft:#FBEAEA; --info:#0E7490; --info-soft:#E3F3F7; --plain-soft:#F0F2F5;
+  --grid:#EDF0F3; --shadow:0 1px 2px rgba(11,18,32,.05),0 4px 16px rgba(11,18,32,.05); --pop:0 12px 40px rgba(11,18,32,.16);
+  --f:"Geist",-apple-system,"Segoe UI",system-ui,sans-serif; --fm:"Geist Mono",ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0A0E15; --panel:#10151F; --subtle:#151B27; --line:#212A38; --line-2:#2B3647;
+  --ink:#E8EDF4; --ink-2:#B9C3D1; --muted:#8792A3;
+  --brand:#7A9CFF; --brand-ink:#08101F; --brand-soft:rgba(122,156,255,.13); --brand-line:rgba(122,156,255,.35);
+  --good:#3ECB8B; --good-soft:rgba(62,203,139,.12); --warn:#E8B24E; --warn-soft:rgba(232,178,78,.12); --crit:#F26B65; --crit-soft:rgba(242,107,101,.12); --info:#45BCD6; --info-soft:rgba(69,188,214,.12); --plain-soft:#151B27;
+  --grid:#1A2230; --shadow:0 1px 2px rgba(0,0,0,.4); --pop:0 16px 48px rgba(0,0,0,.5); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0A0E15; --panel:#10151F; --subtle:#151B27; --line:#212A38; --line-2:#2B3647;
+  --ink:#E8EDF4; --ink-2:#B9C3D1; --muted:#8792A3;
+  --brand:#7A9CFF; --brand-ink:#08101F; --brand-soft:rgba(122,156,255,.13); --brand-line:rgba(122,156,255,.35);
+  --good:#3ECB8B; --good-soft:rgba(62,203,139,.12); --warn:#E8B24E; --warn-soft:rgba(232,178,78,.12); --crit:#F26B65; --crit-soft:rgba(242,107,101,.12); --info:#45BCD6; --info-soft:rgba(69,188,214,.12); --plain-soft:#151B27;
+  --grid:#1A2230; --shadow:0 1px 2px rgba(0,0,0,.4); --pop:0 16px 48px rgba(0,0,0,.5); color-scheme:dark}
+
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{background:var(--bg)}
+body{margin:0;color:var(--ink);font:14px/1.55 var(--f);-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{margin:0;line-height:1.15;letter-spacing:-.02em;text-wrap:balance;font-weight:600}
+p{margin:0}
+a{color:inherit}
+button{font:inherit;color:inherit}
+.num{font-variant-numeric:tabular-nums}
+.mono{font-family:var(--fm)}
+.muted{color:var(--muted)}
+.ink2{color:var(--ink-2)}
+.flex1{flex:1}
+:focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:4px}
+.gutter{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.scroll-x{overflow-x:auto}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;height:34px;padding:0 13px;border-radius:7px;border:1px solid var(--line-2);background:var(--panel);font-weight:500;font-size:13.5px;cursor:pointer;text-decoration:none;white-space:nowrap;transition:background .12s,border-color .12s}
+.btn:hover{background:var(--subtle)}
+.btn.primary{background:var(--brand);border-color:var(--brand);color:var(--brand-ink)}
+.btn.primary:hover{filter:brightness(1.07);background:var(--brand)}
+.btn.quiet{border-color:transparent;background:transparent}
+.btn.quiet:hover{background:var(--subtle)}
+.btn.lg{height:42px;padding:0 18px;font-size:14.5px;border-radius:8px}
+.btn.sm{height:28px;padding:0 10px;font-size:12.5px}
+.btn[disabled]{opacity:.5;pointer-events:none}
+.btn svg{width:15px;height:15px;flex:none}
+label.lbl,span.lbl{display:block;font-size:12.5px;font-weight:500;color:var(--ink-2);margin-bottom:6px}
+.inp{width:100%;height:36px;border:1px solid var(--line-2);border-radius:7px;background:var(--panel);color:var(--ink);padding:0 11px;font:inherit;font-size:14px}
+textarea.inp{height:auto;padding:9px 11px;resize:vertical}
+.inp:focus{outline:2px solid var(--brand-line);border-color:var(--brand);outline-offset:0}
+.help{font-size:12px;color:var(--muted);margin-top:5px}
+.fgrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fgrid .full{grid-column:1/-1}
+@media (max-width:560px){.fgrid{grid-template-columns:1fr}}
+.alert{padding:10px 12px;border-radius:8px;font-size:13px;border:1px solid transparent}
+.alert.err{background:var(--crit-soft);color:var(--crit)}
+.alert.ok{background:var(--good-soft);color:var(--good)}
+.alert.note{background:var(--subtle);border-color:var(--line);color:var(--ink-2)}
+.alert.warnb{background:var(--warn-soft);color:var(--warn)}
+
+.pill{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 8px;border-radius:999px;font-size:12px;font-weight:500;white-space:nowrap;background:var(--subtle);color:var(--ink-2)}
+.pill::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.pill.plain::before{display:none}
+.pill.good{background:var(--good-soft);color:var(--good)}
+.pill.warn{background:var(--warn-soft);color:var(--warn)}
+.pill.crit{background:var(--crit-soft);color:var(--crit)}
+.pill.info{background:var(--info-soft);color:var(--info)}
+.pill.brand{background:var(--brand-soft);color:var(--brand)}
+.c-good{color:var(--good)}.c-warn{color:var(--warn)}.c-crit{color:var(--crit)}.c-info{color:var(--info)}.c-brand{color:var(--brand)}
+
+/* ============ MARKETING ============ */
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:50;background:var(--bg)}
+.site-nav{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:saturate(1.4) blur(10px);border-bottom:1px solid var(--line)}
+.wrap{max-width:1180px;margin:0 auto}
+.site-nav .wrap{display:flex;align-items:center;gap:22px;height:60px}
+.logo{display:inline-flex;align-items:center;gap:9px;font-weight:650;font-size:16.5px;letter-spacing:-.02em;text-decoration:none}
+.logo svg{flex:none}
+.site-links{display:flex;gap:2px}
+.site-links a{padding:6px 10px;border-radius:6px;text-decoration:none;color:var(--ink-2);font-size:13.5px}
+.site-links a:hover{background:var(--subtle);color:var(--ink)}
+@media (max-width:920px){.site-links{display:none}}
+@media (max-width:400px){.site-nav .wrap{gap:10px}.site-nav .btn{padding:0 10px}}
+
+.hero{padding-block:72px 56px;display:grid;gap:44px}
+.hero-copy{max-width:780px}
+.kicker{display:inline-flex;align-items:center;gap:8px;font-size:12.5px;font-weight:500;color:var(--ink-2);border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:4px 12px 4px 5px;max-width:100%}
+.kicker b{background:var(--brand-soft);color:var(--brand);font-weight:600;border-radius:999px;padding:2px 8px;font-size:11.5px;flex:none}
+.kicker span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.hero > *{min-width:0}
+.hero h1{font-size:clamp(36px,5.4vw,60px);font-weight:600;letter-spacing:-.035em;margin-top:20px}
+.hero .sub{font-size:clamp(16px,1.7vw,19px);color:var(--ink-2);max-width:62ch;margin-top:18px;line-height:1.55}
+.ctas{display:flex;gap:10px;flex-wrap:wrap;margin-top:28px}
+.trust{display:flex;gap:10px 22px;flex-wrap:wrap;margin-top:22px;font-size:13px;color:var(--muted)}
+.trust span{display:inline-flex;align-items:center;gap:6px}
+.trust svg{width:15px;height:15px;color:var(--good)}
+.shot{border:1px solid var(--line);border-radius:14px;background:var(--panel);box-shadow:var(--pop);overflow:hidden}
+.shot-bar{display:flex;align-items:center;gap:6px;height:36px;padding:0 14px;border-bottom:1px solid var(--line);background:var(--subtle)}
+.shot-bar i{width:10px;height:10px;border-radius:50%;background:var(--line-2)}
+.shot-bar span{margin-left:10px;font:12px var(--fm);color:var(--muted)}
+.shot-body{display:grid;grid-template-columns:190px 1fr}
+.shot-side{border-right:1px solid var(--line);padding:14px 10px;display:flex;flex-direction:column;gap:2px;font-size:13px}
+.shot-side div{padding:7px 10px;border-radius:6px;color:var(--ink-2)}
+.shot-side div.on{background:var(--brand-soft);color:var(--brand);font-weight:500}
+.shot-main{padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.shot-kpis{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+@media (max-width:760px){.shot-body{grid-template-columns:1fr}.shot-side{display:none}}
+@media (max-width:520px){.shot-kpis{grid-template-columns:1fr}}
+
+section.sec{padding-block:80px;border-top:1px solid var(--line)}
+.sec-title{max-width:720px;margin-bottom:40px}
+.eyebrow{font-size:12.5px;font-weight:600;color:var(--brand)}
+.sec-title h2{font-size:clamp(28px,3.4vw,40px);letter-spacing:-.03em;margin-top:10px}
+.sec-title p{font-size:16.5px;color:var(--ink-2);margin-top:14px;max-width:62ch}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);border-radius:12px;background:var(--panel);overflow:hidden}
+.stat{padding:24px;border-right:1px solid var(--line);min-width:0}
+.stat:last-child{border-right:0}
+.stat b{display:block;font-size:34px;font-weight:600;letter-spacing:-.03em}
+.stat span{display:block;color:var(--ink-2);margin-top:6px;font-size:13.5px}
+.stat small{display:block;color:var(--muted);margin-top:10px;font-size:11.5px}
+@media (max-width:860px){.stats{grid-template-columns:1fr 1fr}.stat:nth-child(2){border-right:0}.stat:nth-child(-n+2){border-bottom:1px solid var(--line)}}
+@media (max-width:460px){.stats{grid-template-columns:1fr}.stat{border-right:0;border-bottom:1px solid var(--line)}.stat:last-child{border-bottom:0}}
+.modules{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.module{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:22px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.module .ic{width:34px;height:34px;border-radius:8px;display:grid;place-items:center;background:var(--brand-soft);color:var(--brand)}
+.module .ic svg{width:18px;height:18px}
+.module h3{font-size:16px;margin-top:4px}
+.module p{color:var(--ink-2);font-size:13.5px}
+.module .stage{font:500 11.5px var(--fm);color:var(--muted)}
+@media (max-width:980px){.modules{grid-template-columns:1fr 1fr}}
+@media (max-width:520px){.modules{grid-template-columns:1fr}}
+.split{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start}
+.split > *{min-width:0}
+@media (max-width:900px){.split{grid-template-columns:1fr}}
+.card{border:1px solid var(--line);border-radius:12px;background:var(--panel)}
+.card-pad{padding:22px}
+.cmp{width:100%;border-collapse:collapse;font-size:13.5px;min-width:660px}
+.cmp th,.cmp td{padding:12px 16px;border-bottom:1px solid var(--line);text-align:left}
+.cmp th{font-size:12px;font-weight:500;color:var(--muted);background:var(--subtle)}
+.cmp tr:last-child td{border-bottom:0}
+.cmp tr.us td{background:var(--brand-soft)}
+.cmp tr.us td:first-child{font-weight:600;color:var(--brand)}
+.range-row{display:flex;align-items:center;gap:12px}
+.range-row input{flex:1;accent-color:var(--brand);min-width:0}
+.range-row output{font:500 13px var(--fm);min-width:56px;text-align:right}
+.segc{display:inline-flex;border:1px solid var(--line-2);border-radius:8px;padding:2px;background:var(--subtle);flex-wrap:wrap;max-width:100%}
+.segc button{border:0;background:transparent;padding:6px 11px;border-radius:6px;font-size:13px;font-weight:500;cursor:pointer;color:var(--ink-2)}
+.segc button[aria-pressed="true"]{background:var(--panel);color:var(--ink);box-shadow:var(--shadow)}
+.roi-big{font-size:clamp(34px,4.4vw,48px);font-weight:600;letter-spacing:-.035em;color:var(--good)}
+.bars{display:grid;grid-template-columns:auto 1fr auto;gap:10px 12px;align-items:center;font-size:13px;margin-top:16px}
+.bars .t{height:10px;background:var(--subtle);border-radius:5px;overflow:hidden}
+.bars .t i{display:block;height:100%;border-radius:5px;transition:width .35s}
+.plans{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.plan{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:24px;display:flex;flex-direction:column;gap:16px}
+.plan.feat{border-color:var(--brand);box-shadow:0 0 0 1px var(--brand)}
+.plan .pname{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.plan .price{font-size:36px;font-weight:600;letter-spacing:-.03em}
+.plan .price small{font-size:13px;font-weight:400;color:var(--muted);letter-spacing:0}
+.plan ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:9px;flex:1;font-size:13.5px;color:var(--ink-2)}
+.plan li{display:flex;gap:9px}
+.plan li svg{flex:none;width:16px;height:16px;color:var(--brand);margin-top:2px}
+@media (max-width:900px){.plans{grid-template-columns:1fr}}
+.roadmap{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.phase{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:22px;display:flex;flex-direction:column;gap:8px}
+.phase .when{font:500 12px var(--fm);color:var(--muted)}
+.phase h3{font-size:16.5px}
+.phase p{color:var(--ink-2);font-size:13.5px}
+.phase .gate{margin-top:auto;padding-top:12px;border-top:1px dashed var(--line);font-size:12.5px;color:var(--muted)}
+.phase .gate b{color:var(--ink);font-weight:500}
+@media (max-width:860px){.roadmap{grid-template-columns:1fr}}
+.team{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+.person{border:1px solid var(--line);border-radius:12px;background:var(--panel);padding:18px;display:flex;flex-direction:column;gap:12px;min-width:0}
+.ava{width:40px;height:40px;border-radius:50%;display:grid;place-items:center;font-weight:600;font-size:14px;background:var(--brand-soft);color:var(--brand);flex:none}
+.person b{font-weight:600;font-size:14px}
+.person span{font-size:12.5px;color:var(--muted);display:block;margin-top:2px}
+@media (max-width:980px){.team{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:440px){.team{grid-template-columns:1fr}}
+.faq{display:flex;flex-direction:column;border-top:1px solid var(--line)}
+.faq details{border-bottom:1px solid var(--line);padding:16px 0}
+.faq summary{cursor:pointer;font-weight:500;font-size:15px;list-style:none;display:flex;justify-content:space-between;gap:16px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";color:var(--muted);font-size:18px;line-height:1}
+.faq details[open] summary::after{content:"−"}
+.faq p{color:var(--ink-2);margin-top:10px;max-width:70ch}
+.cta-band{border:1px solid var(--line);border-radius:16px;background:var(--panel);padding:clamp(24px,4vw,44px);display:flex;justify-content:space-between;align-items:center;gap:24px;flex-wrap:wrap;margin-top:80px}
+.cta-band h2{font-size:clamp(24px,3vw,32px);letter-spacing:-.03em}
+.site-foot{border-top:1px solid var(--line);padding-block:28px 48px;margin-top:56px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:16px;font-size:12.5px;color:var(--muted)}
+
+/* ============ AUTH ============ */
+.auth{min-height:100vh;display:grid;grid-template-columns:1fr 1fr}
+.auth-form{display:flex;flex-direction:column;padding-block:28px 40px}
+.auth-inner{width:min(440px,100%);margin:32px auto auto;display:flex;flex-direction:column;gap:20px}
+.auth-inner h1{font-size:26px;letter-spacing:-.03em}
+.auth-side{background:var(--panel);border-left:1px solid var(--line);padding:48px;display:flex;flex-direction:column;justify-content:center;gap:24px}
+.auth-side .quote{font-size:20px;font-weight:500;letter-spacing:-.02em;line-height:1.4;max-width:30ch}
+.idrow{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:10px;background:var(--panel)}
+.idrow img{width:34px;height:34px;border-radius:50%;flex:none}
+.steps{display:flex;gap:8px}
+.steps span{flex:1;height:4px;border-radius:2px;background:var(--line)}
+.steps span.on{background:var(--brand)}
+.choice{display:grid;gap:10px}
+.choice label{display:flex;gap:12px;align-items:flex-start;border:1px solid var(--line-2);border-radius:10px;padding:14px;cursor:pointer;background:var(--panel)}
+.choice label:has(input:checked){border-color:var(--brand);box-shadow:0 0 0 1px var(--brand);background:var(--brand-soft)}
+.choice input{margin-top:3px;accent-color:var(--brand)}
+.choice b{font-weight:600}
+.choice small{display:block;color:var(--muted);font-size:12.5px}
+.choice .pr{margin-left:auto;font-weight:600;white-space:nowrap}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line-2);border-radius:999px;padding:5px 11px;font-size:13px;cursor:pointer;background:var(--panel)}
+.chip[aria-pressed="true"]{border-color:var(--brand);background:var(--brand-soft);color:var(--brand);font-weight:500}
+@media (max-width:900px){.auth{grid-template-columns:1fr}.auth-side{display:none}}
+
+/* ============ CONSOLE ============ */
+.console{display:grid;grid-template-columns:236px minmax(0,1fr);min-height:100vh}
+.side{position:sticky;top:0;height:100vh;border-right:1px solid var(--line);background:var(--panel);display:flex;flex-direction:column;padding:calc(14px + env(safe-area-inset-top,0px)) 10px calc(14px + env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px))}
+.ws{display:flex;align-items:center;gap:10px;padding:6px 8px 14px;border-bottom:1px solid var(--line);margin-bottom:6px}
+.ws .mark{width:30px;height:30px;border-radius:7px;background:var(--brand);color:var(--brand-ink);display:grid;place-items:center;font-weight:700;font-size:13px;flex:none}
+.ws b{display:block;font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ws small{display:block;font-size:11.5px;color:var(--muted)}
+.nav-g{font-size:11px;font-weight:600;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;padding:12px 10px 6px}
+.nav-i{display:flex;align-items:center;gap:10px;width:100%;border:0;background:transparent;padding:7px 10px;border-radius:7px;font-size:13.5px;color:var(--ink-2);cursor:pointer;text-align:left}
+.nav-i svg{width:16px;height:16px;flex:none;opacity:.85}
+.nav-i:hover{background:var(--subtle);color:var(--ink)}
+.nav-i[aria-current="page"]{background:var(--brand-soft);color:var(--brand);font-weight:500}
+.nav-i .badge{margin-left:auto;font:500 11px var(--fm);background:var(--subtle);color:var(--ink-2);border-radius:999px;padding:1px 7px}
+.nav-i .badge.crit{background:var(--crit-soft);color:var(--crit)}
+.side-foot{margin-top:auto;border-top:1px solid var(--line);padding-top:10px;display:flex;align-items:center;gap:10px}
+.side-foot img{width:28px;height:28px;border-radius:50%;flex:none}
+.side-foot .who{min-width:0;flex:1}
+.side-foot b{display:block;font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.side-foot small{font-size:11.5px;color:var(--muted);display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.main{min-width:0;display:flex;flex-direction:column}
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;height:56px;display:flex;align-items:center;gap:12px;padding:0 max(24px,env(safe-area-inset-right,0px)) 0 24px;border-bottom:1px solid var(--line);background:color-mix(in srgb,var(--bg) 90%,transparent);backdrop-filter:blur(8px)}
+.crumbs{font-size:13.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.crumbs b{color:var(--ink);font-weight:500}
+.livechip{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;color:var(--ink-2);white-space:nowrap}
+.pulse{width:7px;height:7px;border-radius:50%;background:var(--good);animation:pl 2s infinite;flex:none}
+@keyframes pl{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--good) 55%,transparent)}70%{box-shadow:0 0 0 6px transparent}100%{box-shadow:none}}
+.menu-btn{display:none}
+.page{padding:24px max(24px,env(safe-area-inset-right,0px)) 48px 24px;display:flex;flex-direction:column;gap:20px;max-width:1440px;width:100%}
+.ph{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.ph h1{font-size:22px;letter-spacing:-.025em}
+.ph p{color:var(--muted);margin-top:4px;font-size:13.5px}
+.ph .acts{display:flex;gap:8px;flex-wrap:wrap}
+.banner{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:9px 12px;border-radius:8px;background:var(--subtle);border:1px solid var(--line);font-size:13px;color:var(--ink-2)}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.kpi{border:1px solid var(--line);border-radius:10px;background:var(--panel);padding:16px;min-width:0}
+.kpi .l{font-size:12.5px;color:var(--muted);display:flex;justify-content:space-between;gap:8px;align-items:center}
+.kpi .v{font-size:26px;font-weight:600;letter-spacing:-.03em;margin-top:6px}
+.kpi .d{font-size:12px;margin-top:2px;color:var(--muted)}
+@media (max-width:1100px){.kpis{grid-template-columns:1fr 1fr}}
+@media (max-width:480px){.kpis{grid-template-columns:1fr}}
+.box{border:1px solid var(--line);border-radius:10px;background:var(--panel);min-width:0}
+.box-h{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;border-bottom:1px solid var(--line);flex-wrap:wrap}
+.box-h h2{font-size:14.5px;letter-spacing:-.01em}
+.box-h small{color:var(--muted);font-size:12.5px}
+.box-b{padding:16px}
+.g2{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(0,1fr);gap:14px}
+.g2e{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+.g3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media (max-width:1100px){.g2,.g2e{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:900px){.g3{grid-template-columns:minmax(0,1fr)}}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{font-size:12px;font-weight:500;color:var(--muted);text-align:left;padding:9px 14px;border-bottom:1px solid var(--line);background:var(--subtle);white-space:nowrap}
+.tbl td{padding:10px 14px;border-bottom:1px solid var(--line);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:0}
+.tbl tbody tr.click{cursor:pointer}
+.tbl tbody tr.click:hover td{background:var(--subtle)}
+.tbl tbody tr.sel td{background:var(--brand-soft)}
+.tbl .r{text-align:right}
+.idc b{display:block;font:500 13px var(--fm)}
+.idc small{color:var(--muted);font-size:12px}
+.hbar{display:flex;align-items:center;gap:8px}
+.hbar .t{width:70px;height:6px;border-radius:3px;background:var(--subtle);overflow:hidden;flex:none}
+.hbar .t i{display:block;height:100%;border-radius:3px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px 14px;border-bottom:1px solid var(--line)}
+.toolbar .inp{height:32px;font-size:13px;width:auto}
+.toolbar .search{flex:1;min-width:180px}
+.empty{padding:36px 20px;text-align:center;color:var(--muted)}
+.empty b{display:block;color:var(--ink);font-weight:500;margin-bottom:4px}
+.list-i{display:flex;gap:12px;align-items:flex-start;padding:12px 16px;border-bottom:1px solid var(--line)}
+.list-i:last-child{border-bottom:0}
+.list-i .dotc{width:8px;height:8px;border-radius:50%;margin-top:6px;flex:none}
+.list-i .body{flex:1;min-width:0}
+.list-i .body b{font-weight:500}
+.list-i .body small{display:block;color:var(--muted);font-size:12.5px}
+.list-i .when{font-size:12px;color:var(--muted);white-space:nowrap}
+.list-i .acts{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+@media (max-width:600px){.list-i{flex-wrap:wrap}.list-i .acts{width:100%;justify-content:flex-start;padding-left:20px}}
+.chart svg{display:block;width:100%;height:auto}
+.chart text{fill:var(--muted);font:11px var(--f)}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted)}
+.legend i{display:inline-block;width:10px;height:3px;border-radius:2px;margin-right:6px;vertical-align:middle}
+.kanban{display:grid;grid-template-columns:repeat(4,minmax(240px,1fr));gap:12px;overflow-x:auto;padding-bottom:6px}
+.col{background:var(--subtle);border:1px solid var(--line);border-radius:10px;padding:10px;display:flex;flex-direction:column;gap:8px;min-height:160px}
+.col-h{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;font-weight:600;padding:2px 4px 6px}
+.wo{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:12px;display:flex;flex-direction:column;gap:8px;box-shadow:var(--shadow)}
+.wo .top{display:flex;justify-content:space-between;gap:8px;font:500 12px var(--fm);color:var(--muted)}
+.wo b{font-size:13.5px;font-weight:500}
+.wo .meta{font-size:12px;color:var(--muted);display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center}
+.wo .acts{display:flex;gap:6px;flex-wrap:wrap}
+.drawer-scrim{position:fixed;inset:0;background:rgba(6,10,18,.4);z-index:60}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(560px,100%);background:var(--bg);border-left:1px solid var(--line);z-index:61;display:flex;flex-direction:column;box-shadow:var(--pop);padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);padding-right:env(safe-area-inset-right,0px)}
+.drawer-h{display:flex;align-items:center;gap:12px;padding:16px 20px;border-bottom:1px solid var(--line);background:var(--panel)}
+.drawer-b{overflow:auto;padding:20px;display:flex;flex-direction:column;gap:16px}
+.tele{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.tele .box{padding:12px}
+.tele .l{font-size:12px;color:var(--muted)}
+.tele .v{font:500 17px var(--fm);margin-top:2px}
+@media (max-width:520px){.tele{grid-template-columns:1fr 1fr}}
+.kv{display:grid;grid-template-columns:auto 1fr;gap:8px 18px;font-size:13px;margin:0}
+.kv dt{color:var(--muted)}
+.kv dd{margin:0;min-width:0}
+.modal-scrim{position:fixed;inset:0;background:rgba(6,10,18,.45);z-index:70;display:grid;place-items:center;padding:16px}
+.modal{background:var(--panel);border:1px solid var(--line);border-radius:12px;width:min(540px,100%);max-height:calc(100vh - 32px);overflow:auto;box-shadow:var(--pop)}
+.modal-h{padding:16px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center}
+.modal-b{padding:20px}
+.modal-f{padding:14px 20px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:8px}
+.toast{position:fixed;right:max(20px,env(safe-area-inset-right,0px));bottom:calc(20px + env(safe-area-inset-bottom,0px));background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:8px;font-size:13.5px;z-index:90;box-shadow:var(--pop);max-width:calc(100% - 40px)}
+.toggle{display:flex;justify-content:space-between;align-items:center;gap:16px;padding:12px 0;border-bottom:1px solid var(--line);cursor:pointer}
+.toggle:last-child{border-bottom:0}
+.toggle small{display:block;color:var(--muted);font-size:12.5px}
+.sw{appearance:none;-webkit-appearance:none;width:34px;height:20px;border-radius:999px;background:var(--line-2);position:relative;cursor:pointer;flex:none;transition:background .15s;margin:0}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;background:#fff;transition:left .15s;box-shadow:0 1px 2px rgba(0,0,0,.25)}
+.sw:checked{background:var(--brand)}
+.sw:checked::after{left:16px}
+.codebox{font:12.5px/1.6 var(--fm);background:var(--subtle);border:1px solid var(--line);border-radius:8px;padding:12px;overflow-x:auto;white-space:pre}
+.tabs-u{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto}
+.tabs-u button{border:0;background:transparent;padding:9px 12px;font-size:13.5px;font-weight:500;color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tabs-u button[aria-selected="true"]{color:var(--ink);border-color:var(--brand)}
+.hm{display:flex;gap:4px;flex-wrap:wrap}
+.hm button{width:30px;height:28px;border-radius:6px;border:0;cursor:pointer;font:500 11px var(--fm)}
+@media (max-width:860px){
+  .console{grid-template-columns:minmax(0,1fr)}
+  .side{position:fixed;left:0;top:0;bottom:0;z-index:65;width:264px;height:auto;transform:translateX(-102%);transition:transform .2s}
+  .side.open{transform:none;box-shadow:var(--pop)}
+  .menu-btn{display:inline-flex}
+  .topbar{padding-left:max(12px,env(safe-area-inset-left,0px));padding-right:max(12px,env(safe-area-inset-right,0px))}
+  .page{padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+  .hide-sm{display:none}
+}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+</head>
+<body>
+<!-- ======================= MARKETING SITE ======================= -->
+<div id="site">
+  <header class="site-nav gutter">
+    <div class="wrap">
+      <a class="logo" href="#top" aria-label="PulseGuard home"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="6" fill="var(--brand)"/><path d="M4.5 14h4l2-5.5 3.6 10 2.3-6.3H21.5" fill="none" stroke="var(--brand-ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>PulseGuard</a>
+      <nav class="site-links" aria-label="Site">
+        <a href="#product">Product</a><a href="#why">Why PulseGuard</a><a href="#roi">ROI</a><a href="#pricing">Pricing</a><a href="#pilot">Pilot program</a><a href="#company">Company</a>
+      </nav>
+      <span class="flex1"></span>
+      <button class="btn quiet" data-go="login" id="navLogin">Log in</button>
+      <button class="btn primary" data-go="signup">Get started</button>
+    </div>
+  </header>
+
+  <main class="gutter" id="top">
+    <div class="wrap">
+      <section class="hero">
+        <div class="hero-copy">
+          <span class="kicker"><b>Now piloting</b><span>Bengaluru · Delhi NCR · Mumbai · Hyderabad · Chennai</span></span>
+          <h1>Predictive maintenance for EV charging networks.</h1>
+          <p class="sub">PulseGuard connects to your chargers over OCPP, predicts component failures about 48 hours ahead, and dispatches a certified technician with the right part. Fleets and charge point operators get uptime they can put in a contract.</p>
+          <div class="ctas"><button class="btn primary lg" data-go="signup">Start free 30-day pilot</button><button class="btn lg" data-go="demo">View live demo</button></div>
+          <div class="trust">
+            <span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8.5l3 3 7-7"/></svg>Works with any OCPP 1.6J / 2.0.1 charger</span>
+            <span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8.5l3 3 7-7"/></svg>98% uptime SLA available</span>
+            <span><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8.5l3 3 7-7"/></svg>No hardware change on networked chargers</span>
+          </div>
+        </div>
+        <div class="shot" aria-label="PulseGuard console preview">
+          <div class="shot-bar"><i></i><i></i><i></i><span>PulseGuard console · Overview</span></div>
+          <div class="shot-body">
+            <div class="shot-side"><div class="on">Overview</div><div>Chargers</div><div>Alerts</div><div>Work orders</div><div>Dispatch</div><div>Sites</div><div>Reports</div></div>
+            <div class="shot-main" id="shotMain"></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="sec" id="why">
+        <div class="sec-title"><div class="eyebrow">The problem</div><h2>India's charging network is growing faster than it can be maintained.</h2><p>Chargers are repaired only after they fail. Each failure takes days to diagnose, source and fix, and drivers stop trusting the site long after it is back online.</p></div>
+        <div class="stats">
+          <div class="stat"><b class="num">52,718</b><span>public charging stations in India</span><small>Government data in Parliament, July 2026</small></div>
+          <div class="stat"><b class="num c-crit">~50%</b><span>of public chargers found non-functional at some point</span><small>Audit reported by Business Standard, Feb 2024</small></div>
+          <div class="stat"><b class="num">3–7 days</b><span>typical downtime per failure under break-fix</span><small>Harmonic Tribe field research</small></div>
+          <div class="stat"><b class="num">72,300</b><span>more public chargers funded under PM E-DRIVE</span><small>MHI guidelines, ₹2,000 crore outlay</small></div>
+        </div>
+      </section>
+
+      <section class="sec" id="product">
+        <div class="sec-title"><div class="eyebrow">Product</div><h2>One platform from raw telemetry to a closed work order.</h2><p>Built on the DIKW model: data becomes information, information becomes a prediction, and the prediction becomes a planned repair.</p></div>
+        <div class="modules">
+          <div class="module"><div class="ic"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M2 11h3l2-5 3 9 2-6 1 2h5"/></svg></div><span class="stage">Data</span><h3>Monitor</h3><p>Live health score for every charger across brands. Temperature, fan speed, cable resistance, contactor drift and OCPP status in one view.</p></div>
+          <div class="module"><div class="ic"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M3 15l4-4 3 3 7-8"/><path d="M13 6h4v4"/></svg></div><span class="stage">Information</span><h3>Detect</h3><p>Trends and anomalies surfaced per site and component, so a drifting charger stands out from a healthy one.</p></div>
+          <div class="module"><div class="ic"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><circle cx="10" cy="10" r="7"/><path d="M10 6v4l3 2"/></svg></div><span class="stage">Knowledge</span><h3>Predict</h3><p>Failure predictions about 48 hours ahead for fans, connectors, DC contactors and comms boards, with the likely part and the cost avoided.</p></div>
+          <div class="module"><div class="ic"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M4 16V8l6-4 6 4v8"/><path d="M8 16v-4h4v4"/></svg></div><span class="stage">Wisdom</span><h3>Dispatch</h3><p>Work orders booked into off-peak slots, assigned to certified technicians, tracked to resolution and reported against your SLA.</p></div>
+        </div>
+      </section>
+
+      <section class="sec">
+        <div class="sec-title"><div class="eyebrow">Compared</div><h2>The four ways operators handle breakdowns today.</h2><p>Uptime figures are working estimates from our research, to be validated in pilots.</p></div>
+        <div class="card scroll-x">
+          <table class="cmp">
+            <thead><tr><th>Approach</th><th>Repair time</th><th>Fleet uptime</th><th>Upfront cost</th><th>Running cost</th><th>Works across brands</th></tr></thead>
+            <tbody>
+              <tr><td>OEM break-fix AMC</td><td class="num">3–7 days</td><td class="num">60–70%</td><td>Low</td><td>High emergency fees</td><td>No</td></tr>
+              <tr><td>Over-provisioning (2× chargers)</td><td>Varies</td><td class="num">~80%</td><td>Very high</td><td>Lease and demand charges</td><td>Not applicable</td></tr>
+              <tr><td>In-house maintenance team</td><td class="num">24–48 hrs</td><td class="num">~85%</td><td>High</td><td>Fixed salaries</td><td>Yes</td></tr>
+              <tr class="us"><td>PulseGuard</td><td class="num">Under 4 hrs</td><td class="num">98%+ SLA</td><td>Minimal</td><td>Predictable per gun</td><td>Yes, over OCPP</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section class="sec" id="roi">
+        <div class="split">
+          <div>
+            <div class="sec-title" style="margin-bottom:24px"><div class="eyebrow">ROI calculator</div><h2>What downtime costs your network.</h2><p>Assumes 60 kW DC chargers averaging 40 kW and four failures a year per charger under break-fix.</p></div>
+            <div class="card card-pad" style="display:flex;flex-direction:column;gap:18px">
+              <div><label class="lbl" for="rN">DC chargers</label><div class="range-row"><input type="range" id="rN" min="5" max="500" step="5" value="60"><output id="oN" class="num"></output></div></div>
+              <div><label class="lbl" for="rU">Average utilisation</label><div class="range-row"><input type="range" id="rU" min="5" max="40" value="15"><output id="oU" class="num"></output></div></div>
+              <div><label class="lbl" for="rM">Margin per kWh</label><div class="range-row"><input type="range" id="rM" min="4" max="16" value="10"><output id="oM" class="num"></output></div></div>
+              <div><span class="lbl" id="rPl">Plan</span><div class="segc" role="group" aria-labelledby="rPl" id="rPlan"><button data-p="Monitor" aria-pressed="false">Monitor</button><button data-p="Protect" aria-pressed="true">Protect</button><button data-p="Uptime Guarantee" aria-pressed="false">Uptime Guarantee</button></div></div>
+            </div>
+          </div>
+          <div class="card card-pad" style="align-self:stretch;display:flex;flex-direction:column;justify-content:center">
+            <div class="muted" style="font-size:13px">Net saving per year</div>
+            <div class="roi-big num" id="roiBig">₹0</div>
+            <div class="ink2" id="roiSub" style="margin-top:4px"></div>
+            <div class="bars" id="roiBars"></div>
+            <p class="help" style="margin-top:18px">Break-fix: 20 days offline and ₹1,20,000 of repairs per charger a year. With Protect: 4 days and ₹50,000, plus the fee.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="sec" id="pricing">
+        <div class="sec-title"><div class="eyebrow">Pricing</div><h2>Priced per charging gun. Cancel any month.</h2><p>Every plan starts with a free 30-day pilot on up to 50 chargers. Chargers without OCPP need a one-time ₹8,000 sensor kit.</p></div>
+        <div class="plans" id="plans"></div>
+      </section>
+
+      <section class="sec" id="pilot">
+        <div class="sec-title"><div class="eyebrow">Pilot program</div><h2>From first call to contracted uptime in 30 days.</h2><p>We start where downtime has a rupee value attached, prove the result in your own data, then scale across your network.</p></div>
+        <div class="roadmap">
+          <div class="phase"><span class="when">Days 1–7</span><h3>Connect</h3><p>Point your chargers' OCPP backend at PulseGuard, or fit sensor kits. Baseline uptime is measured from day one.</p><div class="gate">Exit: <b>20–50 chargers reporting</b></div></div>
+          <div class="phase"><span class="when">Days 8–30</span><h3>Predict and fix</h3><p>Our team works alongside yours. Every prediction, repair and avoided failure is logged against the baseline.</p><div class="gate">Exit: <b>uptime above 95%, repairs under 4 hrs</b></div></div>
+          <div class="phase"><span class="when">Day 31 onward</span><h3>Scale with an SLA</h3><p>Roll out across sites on Protect or Uptime Guarantee, with a monthly uptime report for your board and investors.</p><div class="gate">Exit: <b>98% SLA in contract</b></div></div>
+        </div>
+        <div class="card card-pad" style="margin-top:20px">
+          <div class="split">
+            <div><h3 style="font-size:18px">Apply for a pilot</h3><p class="ink2" style="margin-top:8px">The founding team reviews every application and replies within two working days.</p></div>
+            <form id="leadForm" novalidate class="fgrid">
+              <div><label class="lbl" for="lCo">Company</label><input class="inp" id="lCo" placeholder="QuickVolt Logistics" autocomplete="organization"></div>
+              <div><label class="lbl" for="lName">Your name</label><input class="inp" id="lName" placeholder="Full name" autocomplete="name"></div>
+              <div><label class="lbl" for="lEmail">Work email</label><input class="inp" id="lEmail" type="email" placeholder="you@company.com" autocomplete="email"></div>
+              <div><label class="lbl" for="lPhone">Phone</label><input class="inp" id="lPhone" type="tel" placeholder="+91" autocomplete="tel"></div>
+              <div><label class="lbl" for="lSeg">Network type</label><select class="inp" id="lSeg"><option>Fleet depot</option><option>Charge point operator</option><option>Fuel retail chargers</option><option>Real estate / destination</option></select></div>
+              <div><label class="lbl" for="lN">DC chargers</label><input class="inp" id="lN" type="number" min="1" value="40"></div>
+              <div class="full"><label class="lbl" for="lNote">What causes most of your downtime?</label><textarea class="inp" id="lNote" rows="2" placeholder="Optional"></textarea></div>
+              <div class="full" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap"><button class="btn primary" type="submit" id="lBtn">Submit application</button><span class="help" style="margin:0">Prototype: applications are stored in this browser.</span></div>
+              <div class="full" id="lMsg" hidden></div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section class="sec" id="company">
+        <div class="sec-title" style="margin-bottom:0"><div class="eyebrow">Company</div><h2>Founded by Harmonic Tribe.</h2><p>PulseGuard started as an MBA venture at Alliance School of Business, Alliance University. Our mission: keep India's EV chargers working, so every driver who plugs in gets a charge.</p></div>
+      </section>
+
+      <section class="sec">
+        <div class="split">
+          <div class="sec-title"><div class="eyebrow">FAQ</div><h2>Questions operators ask us.</h2></div>
+          <div class="faq">
+            <details><summary>Do we need to replace our chargers?</summary><p>No. Networked chargers connect over OCPP 1.6J or 2.0.1, which most DC chargers sold in India support. Older units get a ₹8,000 sensor kit that does not touch the power electronics.</p></details>
+            <details><summary>Which brands do you support?</summary><p>Any charger that speaks OCPP, including mixed fleets. Operators typically run Exicom, Servotech, Delta and imported units side by side; PulseGuard shows them in one view.</p></details>
+            <details><summary>What happens if a prediction is wrong?</summary><p>A false alarm costs one planned visit. A missed failure leaves you no worse than break-fix today. Accuracy improves as every repair feeds back into the model.</p></details>
+            <details><summary>How does the uptime guarantee work?</summary><p>Chargers that pass an initial health audit are covered by a 98% monthly uptime SLA. If we miss it, part of that month's fee is refunded. Grid outages outside the charger are excluded.</p></details>
+            <details><summary>Who owns the data?</summary><p>You do. We use it only to run the service for you, under a written data agreement, and you can export it at any time.</p></details>
+          </div>
+        </div>
+      </section>
+
+      <div class="cta-band"><div><h2>See your network's uptime in the first week.</h2><p class="ink2" style="margin-top:8px">Free 30-day pilot. No hardware change on networked chargers.</p></div><div style="display:flex;gap:10px;flex-wrap:wrap"><button class="btn lg" data-go="demo">View live demo</button><button class="btn primary lg" data-go="signup">Get started</button></div></div>
+      <footer class="site-foot"><span>© 2026 PulseGuard · Harmonic Tribe · Alliance School of Business</span><span>Market data: Government of India, IEEFA, Business Standard. Product figures are planning estimates.</span></footer>
+    </div>
+  </main>
+</div>
+
+<!-- ======================= AUTH / ONBOARDING ======================= -->
+<div id="auth" hidden>
+  <div class="auth">
+    <div class="auth-form gutter">
+      <a class="logo" href="#" data-go="site" style="align-self:flex-start"><svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><rect width="26" height="26" rx="6" fill="var(--brand)"/><path d="M4.5 14h4l2-5.5 3.6 10 2.3-6.3H21.5" fill="none" stroke="var(--brand-ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>PulseGuard</a>
+      <div class="auth-inner" id="authInner"></div>
+    </div>
+    <aside class="auth-side">
+      <div class="eyebrow">Why operators switch</div>
+      <p class="quote">A ₹1,500 fan swapped at 3 AM, instead of a ₹1,80,000 power module after a mid-day failure.</p>
+      <dl class="kv" style="max-width:360px">
+        <dt>Repair time</dt><dd>3–7 days → under 4 hours</dd>
+        <dt>Uptime</dt><dd>60–70% → 98% SLA</dd>
+        <dt>Return</dt><dd>about ₹1.7 for every ₹1 of fee</dd>
+      </dl>
+      <p class="help">Estimates from the PulseGuard business plan. Your pilot measures your own numbers.</p>
+    </aside>
+  </div>
+</div>
+
+<!-- ======================= CONSOLE ======================= -->
+<div id="console" hidden>
+  <div class="console">
+    <aside class="side" id="side" aria-label="Workspace navigation">
+      <div class="ws"><div class="mark" id="wsMark">P</div><div style="min-width:0"><b id="wsName">Workspace</b><small id="wsPlan">Plan</small></div></div>
+      <nav id="nav" style="display:flex;flex-direction:column;gap:1px;overflow:auto"></nav>
+      <div class="side-foot"><img id="meAva" alt=""><div class="who"><b id="meName">You</b><small id="meRole">Owner</small></div><button class="btn quiet sm" id="logout" title="Log out" aria-label="Log out"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 3H3v10h3M10 5l3 3-3 3M13 8H6"/></svg></button></div>
+    </aside>
+    <div class="main">
+      <header class="topbar">
+        <button class="btn quiet sm menu-btn" id="menuBtn" aria-label="Open menu"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M2 4h12M2 8h12M2 12h12"/></svg></button>
+        <div class="crumbs" id="crumbs"></div>
+        <span class="flex1"></span>
+        <span class="livechip hide-sm"><span class="pulse"></span>Live · OCPP stream</span>
+        <button class="btn sm" id="newWoTop"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7"><path d="M8 3v10M3 8h10"/></svg><span class="hide-sm">New work order</span></button>
+      </header>
+      <div class="page" id="page"></div>
+    </div>
+  </div>
+</div>
+
+<div id="overlay"></div>
+<div class="toast" id="toast" hidden role="status"></div>
+
+<script>
+(() => {
+"use strict";
+/* ============================== utilities ============================== */
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const inr = n => (n < 0 ? "−₹" : "₹") + Math.round(Math.abs(n)).toLocaleString("en-IN");
+const inrK = n => Math.abs(n) >= 1e7 ? "₹" + (n / 1e7).toFixed(2) + " Cr" : Math.abs(n) >= 1e5 ? "₹" + (n / 1e5).toFixed(1) + " L" : inr(n);
+const pct = (n, d = 1) => n.toFixed(d) + "%";
+const dShort = t => new Date(t).toLocaleDateString("en-IN", { day: "numeric", month: "short" });
+const dtShort = t => new Date(t).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+const ago = t => { const s = Math.max(1, Math.round((Date.now() - t) / 1000)); return s < 60 ? s + "s ago" : s < 3600 ? Math.round(s / 60) + "m ago" : s < 86400 ? Math.round(s / 3600) + "h ago" : Math.round(s / 86400) + "d ago"; };
+let toastT; function toast(t){ const el = $("#toast"); el.textContent = t; el.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => el.hidden = true, 3000); }
+const LS = { get(k){ try { return JSON.parse(localStorage.getItem("pg2_" + k)); } catch { return null; } }, set(k, v){ try { localStorage.setItem("pg2_" + k, JSON.stringify(v)); } catch {} } };
+const I = {
+  overview: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="5" height="5" rx="1"/><rect x="9" y="2" width="5" height="5" rx="1"/><rect x="2" y="9" width="5" height="5" rx="1"/><rect x="9" y="9" width="5" height="5" rx="1"/></svg>',
+  chargers: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="2" width="7" height="12" rx="1.5"/><path d="M10 6h1.5A1.5 1.5 0 0113 7.5V11a1 1 0 002 0V5l-2-2M7 5.5l-1.5 2.5h2.2L6.2 10.5"/></svg>',
+  alerts: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2a4 4 0 014 4v3l1.5 2.5h-11L4 9V6a4 4 0 014-4zM6.5 13.5a1.5 1.5 0 003 0"/></svg>',
+  orders: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="2" width="10" height="12" rx="1.5"/><path d="M6 6h4M6 9h4M6 12h2"/></svg>',
+  dispatch: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="5" r="2.5"/><path d="M3 14c.5-3 2.5-4.5 5-4.5s4.5 1.5 5 4.5"/></svg>',
+  sites: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 14s5-4.2 5-8A5 5 0 003 6c0 3.8 5 8 5 8z"/><circle cx="8" cy="6" r="1.8"/></svg>',
+  reports: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 14h12M4 11V7M8 11V3M12 11V9"/></svg>',
+  billing: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3.5" width="12" height="9" rx="1.5"/><path d="M2 6.5h12M4.5 10h2"/></svg>',
+  settings: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="2"/><path d="M8 1.5v2M8 12.5v2M1.5 8h2M12.5 8h2M3.4 3.4l1.4 1.4M11.2 11.2l1.4 1.4M3.4 12.6l1.4-1.4M11.2 4.8l1.4-1.4"/></svg>',
+  admin: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 13l4-4 3 2 5-6"/><path d="M10 5h4v4"/></svg>',
+  check: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 8.5l3 3 7-7"/></svg>',
+  x: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 4l8 8M12 4l-8 8"/></svg>',
+  dl: '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M8 2v8M4.5 6.5L8 10l3.5-3.5M3 13h10"/></svg>'
+};
+
+/* ============================== capabilities ============================== */
+const cap = { user: null, db: null, dl: null, me: null, uid: null, owner: false };
+const capReady = (async () => {
+  try {
+    if (!window.claude || !window.claude.use) return;
+    const [u, d, dl] = await Promise.all([claude.use("user").catch(() => null), claude.use("db").catch(() => null), claude.use("downloads").catch(() => null)]);
+    cap.user = u; cap.db = d; cap.dl = dl;
+    if (u) { cap.me = await u.me(); cap.uid = cap.me.id; cap.owner = !!cap.me.isOwner; }
+  } catch {}
+})();
+const settle = (ms = 4000) => Promise.race([capReady, new Promise(r => setTimeout(r, ms))]);
+
+/* ============================== store ============================== */
+const Store = {
+  _lc: null,
+  cloud(){ return !!(cap.db && cap.uid); },
+  ref(){ return cap.db.doc(`data/users/${cap.uid}/workspace`); },
+  async load(){ if (this.cloud()) { try { const s = await this.ref().get(); return s.exists ? s.data() : null; } catch { return null; } } return LS.get("ws"); },
+  async save(p){ if (this.cloud()) return this.ref().set(p); LS.set("ws", p); },
+  async patch(part){ if (this.cloud()) return this.ref().update(part); LS.set("ws", { ...(LS.get("ws") || {}), ...part }); },
+  subOrders(cb){
+    if (this.cloud()) return this.ref().collection("orders").orderBy("createdAt", "desc").onSnapshot(s => cb(s.docs.map(d => ({ id: d.id, ...d.data() }))), () => {});
+    const emit = () => cb(LS.get("orders") || []); emit(); this._lc = emit; return () => { this._lc = null; };
+  },
+  async addOrder(o){ if (this.cloud()) return this.ref().collection("orders").add(o); const a = LS.get("orders") || []; a.unshift({ id: "L" + Date.now(), ...o }); LS.set("orders", a); this._lc && this._lc(); },
+  async setOrder(id, part){ if (this.cloud()) return this.ref().collection("orders").doc(id).update(part); LS.set("orders", (LS.get("orders") || []).map(o => o.id === id ? { ...o, ...part } : o)); this._lc && this._lc(); }
+};
+
+/* ============================== domain ============================== */
+const PLANS = [
+  { name: "Monitor", fee: 900, days: 8, repair: 80000, blurb: "For operators with their own technicians.", feats: ["Health score for every charger", "Failure predictions ~48 h ahead", "One console across all brands", "Email and WhatsApp alerts"] },
+  { name: "Protect", fee: 4500, days: 4, repair: 50000, blurb: "Prediction plus our certified field team.", feats: ["Everything in Monitor", "Quarterly preventive visits", "Priority dispatch, certified technicians", "Spare parts at cost"] },
+  { name: "Uptime Guarantee", fee: 6500, days: 3, repair: 50000, blurb: "Contracted uptime, refund if missed.", feats: ["Everything in Protect", "98% monthly uptime SLA", "Fee refund when the SLA is missed", "Board-ready SLA reports"] }
+];
+const planOf = n => PLANS.find(p => p.name === n) || PLANS[1];
+const CITIES = { BLR: ["Bengaluru", ["Whitefield", "Electronic City", "Hebbal", "HSR Layout", "Peenya", "Yeshwanthpur"]], DEL: ["Delhi NCR", ["Okhla", "Gurugram Sec 18", "Noida Sec 62", "Dwarka", "Manesar", "Mundka"]], MUM: ["Mumbai", ["Andheri East", "Bhiwandi", "Thane", "Navi Mumbai", "Powai", "Kurla"]], PNQ: ["Pune", ["Hinjewadi", "Chakan", "Kharadi", "Hadapsar", "Wakad", "Baner"]], HYD: ["Hyderabad", ["HITEC City", "Gachibowli", "Shamshabad", "Uppal", "Medchal", "Kukatpally"]], MAA: ["Chennai", ["Guindy", "Sriperumbudur", "OMR", "Ambattur", "Porur", "Red Hills"]] };
+const MODELS = [["Exicom", "Harmony Boost 60", 60], ["Servotech", "DC 60 kW", 60], ["Delta", "DC Wallbox 60", 60], ["Exicom", "Harmony Boost 120", 120], ["Servotech", "DC 30 kW", 30], ["Statiq", "DC 60 kW", 60]];
+const COMP = {
+  fan: { label: "Cooling fan", part: "Fan assembly", cost: 1500, avoided: 180000, avoidedWhat: "Power module", signal: "Fan RPM falling while cabinet temperature rises" },
+  connector: { label: "CCS2 connector", part: "Connector pin set", cost: 3200, avoided: 45000, avoidedWhat: "Gun and cable assembly", signal: "Cable resistance rising, handshake retries" },
+  contactor: { label: "DC contactor", part: "DC contactor", cost: 6500, avoided: 95000, avoidedWhat: "Contactor and fuse bank", signal: "Contactor temperature drifting above baseline" },
+  comms: { label: "Comms board", part: "4G / Ethernet module", cost: 2800, avoided: 22000, avoidedWhat: "Controller board", signal: "OCPP heartbeat gaps and reconnects" }
+};
+const STAGES = [["scheduled", "Scheduled"], ["enroute", "En route"], ["inprogress", "In progress"], ["resolved", "Resolved"]];
+const stageLabel = k => (STAGES.find(s => s[0] === k) || STAGES[0])[1];
+const TECHS = [["Ravi Kumar", "L3 · DC power electronics"], ["Meena S", "L2 · Connectors and cabling"], ["Arjun Nair", "L3 · Controllers and OCPP"], ["Farhan Ali", "L2 · Cooling and enclosures"], ["Divya Rao", "L2 · DC power electronics"], ["Karthik M", "L1 · Preventive maintenance"]];
+
+function seeded(seed){ let s = seed >>> 0 || 7; return () => (s = (Math.imul(s, 1664525) + 1013904223) >>> 0) / 4294967296; }
+function hash(str){ let h = 2166136261; for (const ch of String(str)) h = Math.imul(h ^ ch.charCodeAt(0), 16777619); return h >>> 0; }
+
+let S = null, F = null;
+function buildFleet(ws){
+  const rnd = seeded(hash(ws.company + ws.city + (ws.createdAt || 0)));
+  const [cityName, areas] = CITIES[ws.city] || CITIES.BLR;
+  const nSites = Math.max(1, Math.min(6, ws.sites || 3));
+  const sites = areas.slice(0, nSites).map((a, i) => ({ id: "S" + (i + 1), name: a, code: a.replace(/[^A-Za-z]/g, "").slice(0, 3).toUpperCase(), kind: ws.segment === "Fleet depot" ? "Depot" : "Public hub" }));
+  const n = Math.max(4, Math.min(48, ws.chargers || 12)), comps = Object.keys(COMP), chargers = [];
+  for (let i = 0; i < n; i++) {
+    const site = sites[i % nSites], m = MODELS[Math.floor(rnd() * MODELS.length)];
+    const special = i === 2 ? 0.66 : i === 5 ? 0.42 : i === 9 ? 0.78 : i === 13 ? 0.55 : rnd() * 0.18;
+    chargers.push({ id: `${ws.city}-${site.code}-${String(Math.floor(i / nSites) + 1).padStart(2, "0")}`, site: site.id, brand: m[0], model: m[1], kw: m[2], fw: ["1.6J", "1.6J", "2.0.1"][Math.floor(rnd() * 3)], comp: comps[Math.floor(rnd() * comps.length)], deg: special, rate: 0.0012 + rnd() * 0.002 + (special > 0.3 ? 0.0012 : 0), down: false, baseT: 36 + rnd() * 6, noise: rnd() * 10, sessions: Math.round(8 + rnd() * 16), installed: 2023 + Math.floor(rnd() * 3), hist: [], tele: [] });
+  }
+  const days = [];
+  for (let d = 29; d >= 0; d--) {
+    const before = d > 22;
+    days.push({ t: Date.now() - d * 864e5, up: Math.min(99.9, before ? 91 + rnd() * 4 : 97.4 + rnd() * 2.2), fails: before ? Math.round(1 + rnd() * 2) : rnd() < 0.22 ? 1 : 0, prevented: before ? 0 : Math.round(rnd() * 2) });
+  }
+  return { sites, chargers, days, cityName, events: [], tick: 0 };
+}
+const siteOf = c => F.sites.find(s => s.id === c.site);
+function health(c){ return c.down ? 0 : Math.max(1, Math.round(100 - Math.pow(c.deg, 1.35) * 72 - (c.deg > 0.92 ? 12 : 0))); }
+function hoursLeft(c){ return Math.max(2, Math.round((1 - c.deg) / c.rate * 0.35)); }
+function tele(c){
+  const k = c.deg, w = Math.sin(F.tick * 0.6 + c.noise), w2 = Math.cos(F.tick * 0.37 + c.noise * 2);
+  return {
+    temp: c.baseT + (c.comp === "fan" ? k * 17 : c.comp === "contactor" ? k * 7 : k * 3) + w * 0.5,
+    rpm: 3400 - (c.comp === "fan" ? k * 1150 : k * 90) + w2 * 22,
+    res: 1.9 + (c.comp === "connector" ? k * 1.9 : k * 0.15) + w * 0.015,
+    drift: (c.comp === "contactor" ? k * 11 : k * 1) + Math.abs(w2) * 0.25,
+    hb: c.comp === "comms" ? Math.round(30 + k * 220 + Math.abs(w) * 8) : Math.round(30 + Math.abs(w) * 4),
+    kw: c.down ? 0 : Math.max(0, Math.round((c.kw * 0.55 + w * c.kw * 0.3) * 10) / 10)
+  };
+}
+function orderFor(id){ return S.orders.find(o => o.chargerId === id && o.status !== "resolved"); }
+function stateOf(c){
+  const o = orderFor(c.id);
+  if (o) return { k: "info", t: stageLabel(o.status) };
+  if (c.down) return { k: "crit", t: "Offline" };
+  const h = health(c);
+  if (h < 55) return { k: "crit", t: "Failure in ~" + hoursLeft(c) + " h" };
+  if (h < 80) return { k: "warn", t: "Degrading" };
+  return { k: "good", t: "Healthy" };
+}
+function alerts(){
+  const out = [];
+  F.chargers.forEach(c => {
+    if (orderFor(c.id)) return;
+    const h = health(c), C = COMP[c.comp], site = siteOf(c);
+    if (c.down) out.push({ id: c.id + ":down", c, sev: "crit", title: `${c.id} is offline`, detail: `${C.label} failed at ${site.name}. Drivers are being turned away.`, comp: c.comp });
+    else if (h < 55) out.push({ id: c.id + ":" + c.comp + ":p", c, sev: "crit", title: `${C.label} failure predicted in ~${hoursLeft(c)} h`, detail: `${c.id} · ${site.name} · ${C.signal}`, comp: c.comp });
+    else if (h < 80) out.push({ id: c.id + ":" + c.comp + ":w", c, sev: "warn", title: `${C.label} degrading`, detail: `${c.id} · ${site.name} · ${C.signal}`, comp: c.comp });
+  });
+  return out.sort((a, b) => a.sev === b.sev ? health(a.c) - health(b.c) : a.sev === "crit" ? -1 : 1);
+}
+function log(kind, text){ F.events.unshift({ t: Date.now(), kind, text }); if (F.events.length > 80) F.events.length = 80; }
+function step(){
+  F.tick++;
+  F.chargers.forEach(c => {
+    const done = S.orders.find(o => o.chargerId === c.id && o.status === "resolved" && !S.applied.has(o.id));
+    if (done) { S.applied.add(done.id); c.deg = 0.03; c.down = false; log("good", `${c.id} ${(COMP[done.comp] || COMP.fan).part.toLowerCase()} replaced · health restored`); }
+    if (!orderFor(c.id) && !c.down) {
+      const before = health(c); c.deg = Math.min(1, c.deg + c.rate); const h = health(c);
+      if (before >= 80 && h < 80) log("warn", `${c.id} ${COMP[c.comp].signal.toLowerCase()}`);
+      if (before >= 55 && h < 55) log("crit", `${c.id} ${COMP[c.comp].label.toLowerCase()} failure predicted in ~${hoursLeft(c)} h`);
+      if (c.deg >= 1) { c.down = true; log("crit", `${c.id} went offline · ${COMP[c.comp].label.toLowerCase()} failed`); }
+    }
+    c.hist.push(health(c)); if (c.hist.length > 90) c.hist.shift();
+    c.tele.push(tele(c)); if (c.tele.length > 90) c.tele.shift();
+  });
+}
+
+/* ============================== charts ============================== */
+function lineChart({ series, labels, w = 720, h = 220, yMin, yMax, yFmt = v => v, ticks = 4, pad = { l: 44, r: 14, t: 14, b: 26 }, mark }){
+  const all = series.flatMap(s => s.values);
+  let lo = yMin ?? Math.min(...all), hi = yMax ?? Math.max(...all);
+  if (hi - lo < 1e-6) { hi += 1; lo -= 1; }
+  if (yMin == null) { const span = hi - lo; lo -= span * .1; hi += span * .1; }
+  const n = Math.max(...series.map(s => s.values.length));
+  const bottom = labels ? pad.b : Math.min(pad.b, 10);
+  const X = i => pad.l + (n <= 1 ? 0 : i / (n - 1) * (w - pad.l - pad.r)), Y = v => pad.t + (1 - (v - lo) / (hi - lo)) * (h - pad.t - bottom);
+  let g = "";
+  for (let k = 0; k <= ticks; k++) { const v = lo + (hi - lo) * k / ticks, y = Y(v); g += `<line x1="${pad.l}" x2="${w - pad.r}" y1="${y.toFixed(1)}" y2="${y.toFixed(1)}" stroke="var(--grid)"/><text x="${pad.l - 8}" y="${(y + 3.5).toFixed(1)}" text-anchor="end">${esc(yFmt(v))}</text>`; }
+  if (labels) { const st = Math.ceil(labels.length / 6); labels.forEach((l, i) => { if (i % st === 0 || i === labels.length - 1) g += `<text x="${X(i).toFixed(1)}" y="${h - 6}" text-anchor="${i === 0 ? "start" : i === labels.length - 1 ? "end" : "middle"}">${esc(l)}</text>`; }); }
+  if (mark) g += `<line x1="${X(mark.i)}" x2="${X(mark.i)}" y1="${pad.t}" y2="${h - bottom}" stroke="var(--line-2)" stroke-dasharray="3 3"/><text x="${X(mark.i) + 6}" y="${pad.t + 10}" text-anchor="start">${esc(mark.label)}</text>`;
+  series.forEach(s => {
+    const pts = s.values.map((v, i) => [X(i), Y(Math.max(lo, Math.min(hi, v)))]);
+    const d = pts.map((p, i) => (i ? "L" : "M") + p[0].toFixed(1) + " " + p[1].toFixed(1)).join("");
+    if (s.area) g += `<path d="${d}L${pts[pts.length - 1][0].toFixed(1)} ${h - bottom}L${pts[0][0].toFixed(1)} ${h - bottom}Z" fill="${s.color}" fill-opacity=".08"/>`;
+    g += `<path d="${d}" fill="none" stroke="${s.color}" stroke-width="${s.width || 2}" stroke-linejoin="round" stroke-linecap="round"${s.dash ? ` stroke-dasharray="${s.dash}"` : ""}/>`;
+    if (s.dot !== false) { const last = pts[pts.length - 1]; g += `<circle cx="${last[0].toFixed(1)}" cy="${last[1].toFixed(1)}" r="3.5" fill="${s.color}"/>`; }
+  });
+  return `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Chart">${g}</svg>`;
+}
+function barChart({ items, w = 520, h = 200, fmt = v => v, pad = { l: 120, r: 48, t: 6, b: 6 } }){
+  const max = Math.max(1, ...items.map(i => i.v)), bh = (h - pad.t - pad.b) / items.length;
+  let g = "";
+  items.forEach((it, i) => { const y = pad.t + i * bh, bw = (w - pad.l - pad.r) * it.v / max; g += `<text x="${pad.l - 10}" y="${(y + bh / 2 + 4).toFixed(1)}" text-anchor="end">${esc(it.l)}</text><rect x="${pad.l}" y="${(y + bh * .22).toFixed(1)}" width="${w - pad.l - pad.r}" height="${(bh * .56).toFixed(1)}" rx="3" fill="var(--subtle)"/><rect x="${pad.l}" y="${(y + bh * .22).toFixed(1)}" width="${Math.max(2, bw).toFixed(1)}" height="${(bh * .56).toFixed(1)}" rx="3" fill="var(--brand)"/><text x="${(pad.l + bw + 8).toFixed(1)}" y="${(y + bh / 2 + 4).toFixed(1)}" text-anchor="start" style="fill:var(--ink)">${esc(fmt(it.v))}</text>`; });
+  return `<svg viewBox="0 0 ${w} ${h}" role="img" aria-label="Bar chart">${g}</svg>`;
+}
+function spark(vals, color, w = 90, h = 24){ if (vals.length < 2) return ""; const pts = vals.map((v, i) => `${(i / (vals.length - 1) * w).toFixed(1)},${(h - 2 - v / 100 * (h - 4)).toFixed(1)}`).join(" "); return `<svg viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" aria-hidden="true"><polyline points="${pts}" fill="none" stroke="${color}" stroke-width="1.6"/></svg>`; }
+const sc = k => `var(--${k})`;
+const hcol = h => h >= 80 ? "var(--good)" : h >= 55 ? "var(--warn)" : "var(--crit)";
+
+/* ============================== marketing ============================== */
+function renderMarketing(){
+  $("#plans").innerHTML = PLANS.map((p, i) => `<div class="plan${i === 1 ? " feat" : ""}"><div class="pname"><h3 style="font-size:16px">${p.name}</h3>${i === 1 ? '<span class="pill brand plain">Most popular</span>' : ""}</div><div><div class="price num">${inr(p.fee)}<small> / gun / month</small></div><p class="help">${p.blurb}</p></div><ul>${p.feats.map(f => `<li>${I.check}<span>${f}</span></li>`).join("")}</ul><button class="btn${i === 1 ? " primary" : ""}" data-go="signup" data-plan="${p.name}">Start ${p.name} pilot</button></div>`).join("");
+  const vals = [92.1, 93.4, 91.8, 94.2, 93.0, 92.5, 94.8, 97.1, 97.9, 98.3, 97.6, 98.8, 98.4, 99.1, 98.7, 98.9, 99.2, 98.6, 99.0, 99.3];
+  $("#shotMain").innerHTML = `<div class="shot-kpis"><div class="kpi"><div class="l">Network uptime</div><div class="v num">99.3%</div><div class="d c-good">+6.4 pts since go-live</div></div><div class="kpi"><div class="l">Predicted failures</div><div class="v num c-warn">3</div><div class="d">next 72 hours</div></div><div class="kpi"><div class="l">Saved this month</div><div class="v num c-good">₹4.6 L</div><div class="d">vs. break-fix</div></div></div>
+    <div class="box"><div class="box-h"><h2>Network uptime, last 20 days</h2><span class="pill good">SLA met</span></div><div class="box-b chart">${lineChart({ series: [{ values: vals, color: "var(--brand)", area: true }, { values: vals.map(() => 98), color: "var(--muted)", width: 1, dash: "4 4", dot: false }], yMin: 90, yMax: 100, yFmt: v => v.toFixed(0) + "%", w: 640, h: 170, mark: { i: 7, label: "PulseGuard live" } })}</div></div>
+    <div class="box"><div class="list-i"><span class="dotc" style="background:var(--crit)"></span><div class="body"><b>Cooling fan failure predicted in ~46 h</b><small>BLR-WHI-03 · Whitefield depot · fan RPM −18%, cabinet 51 °C</small></div><span class="btn sm primary" aria-hidden="true">Dispatch</span></div><div class="list-i"><span class="dotc" style="background:var(--good)"></span><div class="body"><b>WO-1042 resolved · fan assembly replaced</b><small>28 min on site at 02:40 · ₹1,78,500 avoided</small></div><span class="when">2h ago</span></div></div>`;
+}
+let roiPlan = "Protect";
+function roi(){
+  const n = +$("#rN").value, u = +$("#rU").value / 100, m = +$("#rM").value, p = planOf(roiPlan);
+  $("#oN").textContent = n; $("#oU").textContent = Math.round(u * 100) + "%"; $("#oM").textContent = "₹" + m;
+  const daily = 40 * 24 * u * m, bf = 20 * daily + 120000, fee = p.fee * 12, pg = p.days * daily + p.repair + fee, save = (bf - pg) * n, mult = (bf - (pg - fee)) / fee;
+  $("#roiBig").textContent = inrK(save); $("#roiBig").style.color = save < 0 ? "var(--crit)" : "";
+  $("#roiSub").textContent = `${inr(bf - pg)} per charger a year · about ₹${mult.toFixed(1)} back for every ₹1 of fee`;
+  const mx = Math.max(bf, pg);
+  $("#roiBars").innerHTML = `<span>Break-fix</span><div class="t"><i style="width:${bf / mx * 100}%;background:var(--crit)"></i></div><span class="num mono">${inr(bf)}</span><span>${esc(p.name)}</span><div class="t"><i style="width:${pg / mx * 100}%;background:var(--good)"></i></div><span class="num mono">${inr(pg)}</span>`;
+}
+["#rN", "#rU", "#rM"].forEach(s => $(s).addEventListener("input", roi));
+$$("#rPlan button").forEach(b => b.addEventListener("click", () => { roiPlan = b.dataset.p; $$("#rPlan button").forEach(x => x.setAttribute("aria-pressed", String(x === b))); roi(); }));
+
+/* ============================== routing ============================== */
+function show(v){ ["site", "auth", "console"].forEach(x => $("#" + x).hidden = x !== v); scrollTo(0, 0); }
+document.addEventListener("click", e => {
+  const g = e.target.closest("[data-go]"); if (!g) return;
+  e.preventDefault();
+  const to = g.dataset.go;
+  if (to === "signup") { stopConsole(); authSignup(g.dataset.plan); }
+  else if (to === "login") authLogin();
+  else if (to === "demo") startConsole(demoWs(), true);
+  else if (to === "site") { stopConsole(); show("site"); }
+});
+
+/* ============================== auth & onboarding ============================== */
+function idRow(){
+  if (cap.me && cap.uid) return `<div class="idrow"><img src="${esc(cap.me.avatarUrl)}" alt=""><div style="min-width:0"><b>${esc(cap.me.name || "Your Claude account")}</b><div class="help" style="margin:0">Signed in with Claude · no separate password</div></div></div>`;
+  return `<div class="alert note">Prototype mode: your workspace is saved in this browser only.</div>`;
+}
+function fillId(){ settle().then(() => { const s = $("#idSlot"); if (s) s.innerHTML = idRow(); }); }
+let draft = {};
+function authLogin(){
+  show("auth");
+  $("#authInner").innerHTML = `<div><h1>Log in to PulseGuard</h1><p class="ink2" style="margin-top:8px">Pick up where your team left off.</p></div><div id="idSlot">${idRow()}</div><button class="btn primary lg" id="goLogin">Continue to console</button><div id="loginMsg" hidden></div><div class="help" style="margin:0">New to PulseGuard? <a href="#" data-go="signup">Create a workspace</a> · <a href="#" data-go="demo">View the demo</a></div>`;
+  fillId();
+  $("#goLogin").onclick = async () => {
+    const b = $("#goLogin"); b.disabled = true; b.textContent = "Checking your workspace…";
+    await settle(); const ws = await Store.load();
+    if (ws && ws.onboarded) { startConsole(ws, false); return; }
+    b.disabled = false; b.textContent = "Continue to console";
+    const m = $("#loginMsg"); m.hidden = false; m.className = "alert err";
+    m.innerHTML = `No workspace found for ${Store.cloud() ? "this Claude account" : "this browser"}. <a href="#" data-go="signup">Create one in two minutes</a>.`;
+  };
+}
+function authSignup(plan){ draft = { plan: plan || "Protect", city: "BLR", segment: "Fleet depot", sites: 3, chargers: 24, role: "Head of operations", brands: ["Exicom", "Servotech"] }; show("auth"); signupStep(1); }
+function signupStep(n){
+  const steps = `<div class="steps" aria-label="Step ${n} of 3">${[1, 2, 3].map(i => `<span class="${i <= n ? "on" : ""}"></span>`).join("")}</div>`;
+  const back = n > 1 ? `<button class="btn lg" type="button" id="back">Back</button>` : "";
+  const box = $("#authInner");
+  if (n === 1) {
+    box.innerHTML = `${steps}<div><div class="help" style="margin:0 0 6px">Step 1 of 3</div><h1>Create your workspace</h1><p class="ink2" style="margin-top:8px">Start a free 30-day pilot. No card needed.</p></div><div id="idSlot">${idRow()}</div>
+    <form id="f1" class="fgrid" novalidate>
+      <div class="full"><label class="lbl" for="fCo">Company name</label><input class="inp" id="fCo" value="${esc(draft.company || "")}" placeholder="QuickVolt Logistics" autocomplete="organization"></div>
+      <div><label class="lbl" for="fRole">Your role</label><select class="inp" id="fRole">${["Head of operations", "Depot manager", "Founder / CXO", "Maintenance lead", "Network planning"].map(r => `<option${r === draft.role ? " selected" : ""}>${r}</option>`).join("")}</select></div>
+      <div><label class="lbl" for="fSeg">Network type</label><select class="inp" id="fSeg">${["Fleet depot", "Charge point operator", "Fuel retail chargers", "Real estate / destination"].map(r => `<option${r === draft.segment ? " selected" : ""}>${r}</option>`).join("")}</select></div>
+      <div class="full" id="e1" hidden></div>
+      <div class="full"><button class="btn primary lg" style="width:100%">Continue</button></div>
+    </form><div class="help" style="margin:0">Already have a workspace? <a href="#" data-go="login">Log in</a></div>`;
+    fillId(); $("#fCo").focus();
+    $("#f1").onsubmit = e => { e.preventDefault(); const co = $("#fCo").value.trim(); if (!co) { const m = $("#e1"); m.hidden = false; m.className = "full alert err"; m.textContent = "Enter your company name to continue."; $("#fCo").focus(); return; } Object.assign(draft, { company: co.slice(0, 80), role: $("#fRole").value, segment: $("#fSeg").value }); signupStep(2); };
+  }
+  if (n === 2) {
+    box.innerHTML = `${steps}<div><div class="help" style="margin:0 0 6px">Step 2 of 3</div><h1>Your charging network</h1><p class="ink2" style="margin-top:8px">We'll set up your sites and a pilot feed you can explore right away.</p></div>
+    <form id="f2" class="fgrid" novalidate>
+      <div><label class="lbl" for="fCity">Primary city</label><select class="inp" id="fCity">${Object.entries(CITIES).map(([k, v]) => `<option value="${k}"${k === draft.city ? " selected" : ""}>${v[0]}</option>`).join("")}</select></div>
+      <div><label class="lbl" for="fSites">Sites</label><select class="inp" id="fSites">${[1, 2, 3, 4, 5, 6].map(i => `<option${i === draft.sites ? " selected" : ""}>${i}</option>`).join("")}</select></div>
+      <div class="full"><label class="lbl" for="fN">DC charging guns</label><input class="inp" id="fN" type="number" min="4" max="5000" value="${draft.chargers}"><div class="help">The pilot console shows up to 48. Billing uses your full count.</div></div>
+      <div class="full"><span class="lbl">Charger brands you run</span><div class="chips" id="brands">${["Exicom", "Servotech", "Delta", "Statiq", "Tata Power", "Imported / other"].map(b => `<button type="button" class="chip" aria-pressed="${draft.brands.includes(b)}">${b}</button>`).join("")}</div></div>
+      <div class="full" style="display:flex;gap:8px">${back}<button class="btn primary lg" style="flex:1">Continue</button></div>
+    </form>`;
+    $$("#brands .chip").forEach(c => c.onclick = () => c.setAttribute("aria-pressed", String(c.getAttribute("aria-pressed") !== "true")));
+    $("#back").onclick = () => signupStep(1);
+    $("#f2").onsubmit = e => { e.preventDefault(); Object.assign(draft, { city: $("#fCity").value, sites: +$("#fSites").value, chargers: Math.max(4, Math.min(5000, Math.round(+$("#fN").value) || 24)), brands: $$("#brands .chip").filter(c => c.getAttribute("aria-pressed") === "true").map(c => c.textContent) }); signupStep(3); };
+  }
+  if (n === 3) {
+    box.innerHTML = `${steps}<div><div class="help" style="margin:0 0 6px">Step 3 of 3</div><h1>Choose a plan</h1><p class="ink2" style="margin-top:8px">Free for the 30-day pilot. Change plans any time.</p></div>
+    <form id="f3" novalidate style="display:flex;flex-direction:column;gap:16px"><div class="choice">${PLANS.map(p => `<label><input type="radio" name="plan" value="${p.name}"${p.name === draft.plan ? " checked" : ""}><span><b>${p.name}</b><small>${p.blurb}</small></span><span class="pr num">${inr(p.fee)}<span class="muted" style="font-weight:400">/gun</span></span></label>`).join("")}</div>
+    <div class="alert note" id="planSum"></div>
+    <div style="display:flex;gap:8px">${back}<button class="btn primary lg" style="flex:1" id="create">Create workspace</button></div></form>`;
+    const sum = () => { const p = planOf($("input[name=plan]:checked").value); $("#planSum").textContent = `After the pilot: ${inr(p.fee * draft.chargers)} a month for ${draft.chargers.toLocaleString("en-IN")} guns, plus GST. We'll remind you 7 days before the pilot ends.`; };
+    $$("input[name=plan]").forEach(r => r.onchange = sum); sum();
+    $("#back").onclick = () => signupStep(2);
+    $("#f3").onsubmit = async e => {
+      e.preventDefault(); const b = $("#create"); b.disabled = true; b.textContent = "Creating workspace…";
+      await settle();
+      const ws = { ...draft, plan: $("input[name=plan]:checked").value, createdAt: Date.now(), pilotEnds: Date.now() + 30 * 864e5, onboarded: true, notify: { email: true, whatsapp: true, sms: false, weekly: true }, acked: {} };
+      let cloudSaved = false;
+      try { await Store.save(ws); cloudSaved = Store.cloud(); }
+      catch { cap.db = null; LS.set("ws", ws); toast("Saved in this browser: your access level can't save to the cloud."); }
+      if (cloudSaved) cap.db.doc(`accounts/${cap.uid}`).set({ company: ws.company, segment: ws.segment, city: ws.city, sites: ws.sites, chargers: ws.chargers, plan: ws.plan, role: ws.role, createdAt: ws.createdAt }).catch(() => {});
+      toast("Workspace ready"); startConsole(ws, false);
+    };
+  }
+}
+function demoWs(){ return { company: "QuickVolt Logistics", role: "Head of operations", segment: "Fleet depot", city: "BLR", sites: 4, chargers: 32, plan: "Protect", brands: ["Exicom", "Servotech", "Delta"], createdAt: Date.now() - 23 * 864e5, pilotEnds: Date.now() + 7 * 864e5, onboarded: true, notify: { email: true, whatsapp: true, sms: false, weekly: true }, acked: {}, demo: true }; }
+
+/* ============================== console ============================== */
+let timer = null, unsubs = [];
+const NAV = [["Monitor", [["overview", "Overview"], ["chargers", "Chargers"], ["alerts", "Alerts"]]], ["Operate", [["orders", "Work orders"], ["dispatch", "Dispatch"], ["sites", "Sites"]]], ["Business", [["reports", "Reports"], ["billing", "Billing"], ["settings", "Settings"]]]];
+const TITLES = { overview: "Overview", chargers: "Chargers", alerts: "Alerts", orders: "Work orders", dispatch: "Dispatch", sites: "Sites", reports: "Reports", billing: "Billing", settings: "Settings", admin: "Growth" };
+function startConsole(ws, demo){
+  stopConsole();
+  S = { ws, demo, view: "overview", orders: [], leads: [], accounts: [], applied: new Set(), filter: { q: "", site: "all", st: "all" }, sel: null, adminTab: "pipeline" };
+  F = buildFleet(ws);
+  if (demo) seedDemoOrders();
+  for (let i = 0; i < 40; i++) { F.tick++; F.chargers.forEach(c => { c.hist.push(health(c)); c.tele.push(tele(c)); }); }
+  log("info", `Connected ${F.chargers.length} chargers at ${F.sites.length} sites over OCPP`);
+  show("console");
+  $("#wsName").textContent = ws.company; $("#wsMark").textContent = (ws.company.trim()[0] || "P").toUpperCase();
+  $("#wsPlan").textContent = `${ws.plan} · ${demo ? "demo" : "pilot"}`;
+  $("#meAva").src = (!demo && cap.me?.avatarUrl) || "data:image/svg+xml," + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 28"><rect width="28" height="28" rx="14" fill="#1F4FD6"/><text x="14" y="18" font-size="11" text-anchor="middle" fill="#fff" font-family="sans-serif">QV</text></svg>');
+  $("#meName").textContent = demo ? "Demo user" : (cap.me?.name || "You"); $("#meRole").textContent = ws.role;
+  if (!demo) unsubs.push(Store.subOrders(list => {
+    if (!S) return;
+    list.forEach(o => { if (o.status === "resolved" && Date.now() - (o.resolvedAt || 0) > 90000) S.applied.add(o.id); });
+    S.orders = list; render();
+  }));
+  if (!demo && cap.owner && cap.db) {
+    unsubs.push(cap.db.collection("leads").orderBy("createdAt", "desc").onSnapshot(s => { if (!S) return; S.leads = s.docs.map(d => ({ id: d.id, ...d.data() })); S.view === "admin" ? render() : renderNav(); }, () => {}));
+    unsubs.push(cap.db.collection("accounts").orderBy("createdAt", "desc").onSnapshot(s => { if (!S) return; S.accounts = s.docs.map(d => ({ id: d.id, ...d.data() })); if (S.view === "admin") render(); }, () => {}));
+  }
+  timer = setInterval(() => { step(); tickRender(); }, 2000);
+  go("overview");
+}
+function stopConsole(){ clearInterval(timer); timer = null; unsubs.forEach(u => { try { u(); } catch {} }); unsubs = []; $("#overlay").innerHTML = ""; $$(".modal-scrim").forEach(m => m.remove()); S = null; }
+$("#logout").onclick = () => { stopConsole(); show("site"); toast("Logged out"); };
+$("#menuBtn").onclick = () => $("#side").classList.toggle("open");
+$("#newWoTop").onclick = () => woModal();
+function seedDemoOrders(){
+  const now = Date.now();
+  const mk = (c, status, mins, extra = {}) => { const C = COMP[c.comp]; return { id: "D" + c.id, num: 1040 + S.orders.length, chargerId: c.id, site: siteOf(c).name, comp: c.comp, part: C.part, partCost: C.cost, avoided: C.avoided, priority: "High", slot: "02:30", tech: TECHS[S.orders.length % TECHS.length][0], status, createdAt: now - mins * 60000, ...extra }; };
+  const c1 = F.chargers[5]; S.orders.push(mk(c1, "enroute", 40)); c1.deg = 0.42;
+  [F.chargers[1], F.chargers[7], F.chargers[11]].forEach((c, i) => { const o = mk(c, "resolved", 600 + i * 1900, { resolvedAt: now - (500 + i * 1900) * 60000 }); S.orders.push(o); S.applied.add(o.id); });
+}
+function go(v){ if (!S) return; S.view = v; $("#side").classList.remove("open"); closeOverlay(); render(); scrollTo(0, 0); }
+function renderNav(){
+  const al = alerts().filter(a => !S.ws.acked?.[a.id]).length, open = S.orders.filter(o => o.status !== "resolved").length;
+  const badge = { alerts: al ? `<span class="badge crit">${al}</span>` : "", orders: open ? `<span class="badge">${open}</span>` : "", chargers: `<span class="badge">${F.chargers.length}</span>` };
+  let h = NAV.map(([g, items]) => `<div class="nav-g">${g}</div>` + items.map(([k, l]) => `<button class="nav-i" data-v="${k}"${S.view === k ? ' aria-current="page"' : ""}>${I[k]}<span>${l}</span>${badge[k] || ""}</button>`).join("")).join("");
+  if (!S.demo && cap.owner) h += `<div class="nav-g">Founder</div><button class="nav-i" data-v="admin"${S.view === "admin" ? ' aria-current="page"' : ""}>${I.admin}<span>Growth</span>${S.leads.length ? `<span class="badge">${S.leads.length}</span>` : ""}</button>`;
+  $("#nav").innerHTML = h;
+  $$("#nav .nav-i").forEach(b => b.onclick = () => go(b.dataset.v));
+}
+function render(){
+  if (!S) return;
+  renderNav();
+  $("#crumbs").innerHTML = `${esc(S.ws.company)}<span style="margin:0 8px">/</span><b>${TITLES[S.view]}</b>`;
+  const banner = S.demo ? `<div class="banner"><span class="pill brand plain">Demo</span>Sample network with simulated telemetry. <a href="#" data-go="signup">Create your workspace</a> to save work orders.</div>`
+    : !Store.cloud() ? `<div class="banner"><span class="pill warn plain">This browser only</span>Prototype mode: this workspace is saved in this browser.</div>`
+    : `<div class="banner"><span class="pill good plain">Pilot</span>Work orders and settings sync live across your devices. Telemetry is a simulated pilot feed until your chargers are connected in Settings.</div>`;
+  const focusId = document.activeElement?.id, selStart = document.activeElement?.selectionStart;
+  $("#page").innerHTML = banner + (V[S.view] || V.overview)();
+  bindCommon(); bind[S.view] && bind[S.view]();
+  if (focusId && $("#" + focusId)) { const el = $("#" + focusId); el.focus(); if (selStart != null && el.setSelectionRange) try { el.setSelectionRange(selStart, selStart); } catch {} }
+}
+function tickRender(){
+  if (!S) return;
+  const live = ["overview", "chargers", "alerts", "sites"].includes(S.view);
+  const typing = document.activeElement && /INPUT|SELECT|TEXTAREA/.test(document.activeElement.tagName) && $("#page").contains(document.activeElement) && document.activeElement.id !== "q";
+  if (live && !typing && !$(".modal-scrim")) { const y = scrollY; render(); scrollTo(0, y); } else renderNav();
+  if (S.sel && $("#drawerBody")) drawerBody();
+}
+function bindCommon(){
+  $$("#page [data-v2], #overlay [data-v2]").forEach(b => b.onclick = e => { e.preventDefault(); go(b.dataset.v2); });
+  $$("#page [data-dispatch]").forEach(b => b.onclick = e => { e.stopPropagation(); woModal(b.dataset.dispatch); });
+  $$("#page [data-open]").forEach(r => { r.onclick = () => openCharger(r.dataset.open); if (r.tagName === "TR") { r.tabIndex = 0; r.onkeydown = e => { if (e.key === "Enter") openCharger(r.dataset.open); }; } });
+}
+
+function metrics(){
+  const n = F.chargers.length, up = F.chargers.filter(c => !c.down).length, al = alerts();
+  const pred = al.filter(a => a.sev === "crit" && !a.c.down).length;
+  const resolved = S.orders.filter(o => o.status === "resolved");
+  const saved = resolved.reduce((a, o) => a + Math.max(0, (o.avoided || 0) - (o.partCost || 0)), 0);
+  const up30 = F.days.reduce((a, d) => a + d.up, 0) / F.days.length;
+  const mttr = resolved.length ? resolved.reduce((a, o) => a + Math.min(6, Math.max(0.4, ((o.resolvedAt || o.createdAt) - o.createdAt) / 36e5)), 0) / resolved.length : 0;
+  return { n, up, live: up / n * 100, al, pred, resolved, saved, up30, mttr };
+}
+
+const V = {}, bind = {};
+V.overview = () => {
+  const m = metrics(), d = F.days, prevented = d.reduce((a, x) => a + x.prevented, 0) + m.resolved.length, hr = new Date().getHours();
+  const siteRows = F.sites.map(s => { const cs = F.chargers.filter(c => c.site === s.id); return { s, cs, on: cs.filter(c => !c.down).length, avg: Math.round(cs.reduce((a, c) => a + health(c), 0) / cs.length), risk: cs.filter(c => stateOf(c).k === "crit").length }; });
+  return `<div class="ph"><div><h1>Good ${hr < 12 ? "morning" : hr < 17 ? "afternoon" : "evening"}${!S.demo && cap.me?.name ? ", " + esc(cap.me.name.split(" ")[0]) : ""}</h1><p>${esc(F.cityName)} network · ${F.sites.length} sites · ${F.chargers.length} DC guns · updates every 2 seconds</p></div><div class="acts"><button class="btn" data-v2="reports">${I.reports}SLA report</button><button class="btn primary" id="ovNew">New work order</button></div></div>
+  <div class="kpis">
+    <div class="kpi"><div class="l"><span>Live availability</span><span class="pill ${m.live >= 98 ? "good" : m.live >= 95 ? "warn" : "crit"} plain">${m.up}/${m.n}</span></div><div class="v num">${pct(m.live)}</div><div class="d">chargers online right now</div></div>
+    <div class="kpi"><div class="l">30-day uptime</div><div class="v num">${pct(m.up30, 2)}</div><div class="d">Since go-live: ${pct(d.slice(7).reduce((a, x) => a + x.up, 0) / (d.length - 7), 2)} vs. 98% SLA</div></div>
+    <div class="kpi"><div class="l">Predicted failures</div><div class="v num ${m.pred ? "c-crit" : ""}">${m.pred}</div><div class="d">need a technician in the next 72 h</div></div>
+    <div class="kpi"><div class="l">Saved by prevention</div><div class="v num c-good">${inrK(m.saved)}</div><div class="d">${m.resolved.length} failure${m.resolved.length === 1 ? "" : "s"} avoided, net of parts</div></div>
+  </div>
+  <div class="g2">
+    <div class="box"><div class="box-h"><div><h2>Network uptime, last 30 days</h2><small>Daily availability across all guns · sample history</small></div><div class="legend"><span><i style="background:var(--brand)"></i>Uptime</span><span><i style="background:var(--muted)"></i>98% SLA</span></div></div>
+      <div class="box-b chart">${lineChart({ series: [{ values: d.map(x => x.up), color: "var(--brand)", area: true }, { values: d.map(() => 98), color: "var(--muted)", width: 1, dash: "4 4", dot: false }], labels: d.map(x => dShort(x.t)), yMin: 88, yMax: 100, yFmt: v => v.toFixed(0) + "%", mark: { i: 7, label: "Predictive maintenance on" } })}</div></div>
+    <div class="box"><div class="box-h"><h2>Needs attention</h2><button class="btn sm" data-v2="alerts">All alerts</button></div>
+      ${m.al.length ? m.al.slice(0, 5).map(a => `<div class="list-i"><span class="dotc" style="background:${sc(a.sev)}"></span><div class="body"><b>${esc(a.title)}</b><small>${esc(a.detail)}</small></div><div class="acts"><button class="btn sm${a.sev === "crit" ? " primary" : ""}" data-dispatch="${esc(a.c.id)}">Dispatch</button></div></div>`).join("") : `<div class="empty"><b>All clear</b>No charger needs attention right now.</div>`}
+    </div>
+  </div>
+  <div class="g2">
+    <div class="box"><div class="box-h"><h2>Sites</h2><button class="btn sm" data-v2="sites">View sites</button></div><div class="scroll-x"><table class="tbl" style="min-width:480px"><thead><tr><th>Site</th><th>Online</th><th>Avg health</th><th>At risk</th></tr></thead><tbody>
+      ${siteRows.map(r => `<tr class="click" data-site="${r.s.id}" tabindex="0"><td><div class="idc"><b style="font-family:var(--f)">${esc(r.s.name)}</b><small>${r.s.kind} · ${r.cs.length} guns</small></div></td><td class="num">${r.on}/${r.cs.length}</td><td><div class="hbar"><div class="t"><i style="width:${r.avg}%;background:${hcol(r.avg)}"></i></div><span class="num">${r.avg}</span></div></td><td><span class="pill ${r.risk ? "crit" : "good"}">${r.risk}</span></td></tr>`).join("")}
+    </tbody></table></div></div>
+    <div class="box"><div class="box-h"><h2>Live activity</h2><span class="livechip"><span class="pulse"></span>streaming</span></div><div style="max-height:300px;overflow:auto">${F.events.slice(0, 12).map(e => `<div class="list-i"><span class="dotc" style="background:${sc(e.kind)}"></span><div class="body"><small style="color:var(--ink-2)">${esc(e.text)}</small></div><span class="when">${ago(e.t)}</span></div>`).join("")}</div></div>
+  </div>
+  <div class="box"><div class="box-h"><div><h2>Impact since go-live</h2><small>Against the break-fix baseline of 3–7 days per failure</small></div></div><div class="box-b" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:16px">
+    <div><div class="muted" style="font-size:12.5px">Failures prevented</div><div class="num" style="font-size:22px;font-weight:600">${prevented}</div></div>
+    <div><div class="muted" style="font-size:12.5px">Mean time to repair</div><div class="num" style="font-size:22px;font-weight:600">${m.mttr ? m.mttr.toFixed(1) + " h" : "—"}</div></div>
+    <div><div class="muted" style="font-size:12.5px">Unplanned failures, before → after</div><div class="num" style="font-size:22px;font-weight:600">${d.slice(0, 7).reduce((a, x) => a + x.fails, 0)} → ${d.slice(7).reduce((a, x) => a + x.fails, 0)}</div></div>
+    <div><div class="muted" style="font-size:12.5px">Avoided repair cost</div><div class="num c-good" style="font-size:22px;font-weight:600">${inrK(m.resolved.reduce((a, o) => a + (o.avoided || 0), 0))}</div></div>
+  </div></div>`;
+};
+bind.overview = () => { $("#ovNew").onclick = () => woModal(); $$("tr[data-site]").forEach(r => { const f = () => { S.filter.site = r.dataset.site; go("chargers"); }; r.onclick = f; r.onkeydown = e => { if (e.key === "Enter") f(); }; }); };
+
+V.chargers = () => {
+  const f = S.filter, q = f.q.toLowerCase();
+  const rows = F.chargers.filter(c => (f.site === "all" || c.site === f.site) && (!q || (c.id + " " + c.brand + " " + c.model + " " + siteOf(c).name).toLowerCase().includes(q)) && (f.st === "all" || stateOf(c).k === f.st));
+  const cnt = k => F.chargers.filter(c => stateOf(c).k === k).length;
+  return `<div class="ph"><div><h1>Chargers</h1><p>${F.chargers.length} DC guns · ${cnt("good")} healthy · ${cnt("warn")} degrading · ${cnt("crit")} critical · ${cnt("info")} in repair</p></div><div class="acts"><button class="btn" id="expCh">${I.dl}Export CSV</button></div></div>
+  <div class="box"><div class="toolbar">
+    <input class="inp search" id="q" placeholder="Search charger ID, brand or site" value="${esc(f.q)}" aria-label="Search chargers">
+    <select class="inp" id="fs" aria-label="Site"><option value="all">All sites</option>${F.sites.map(s => `<option value="${s.id}"${f.site === s.id ? " selected" : ""}>${esc(s.name)}</option>`).join("")}</select>
+    <select class="inp" id="fst" aria-label="Status"><option value="all">All statuses</option>${[["good", "Healthy"], ["warn", "Degrading"], ["crit", "Critical / offline"], ["info", "In repair"]].map(([k, l]) => `<option value="${k}"${f.st === k ? " selected" : ""}>${l}</option>`).join("")}</select>
+  </div><div class="scroll-x"><table class="tbl" style="min-width:860px"><thead><tr><th>Charger</th><th>Site</th><th>Model</th><th>Health</th><th>Last 80 s</th><th>Output</th><th>Status</th></tr></thead><tbody>
+  ${rows.length ? rows.map(c => { const s = stateOf(c), h = health(c), t = c.tele[c.tele.length - 1]; return `<tr class="click${S.sel === c.id ? " sel" : ""}" data-open="${esc(c.id)}"><td><div class="idc"><b>${esc(c.id)}</b><small>OCPP ${c.fw} · CCS2</small></div></td><td>${esc(siteOf(c).name)}</td><td><div class="idc"><b style="font-family:var(--f);font-weight:400">${esc(c.brand)}</b><small>${esc(c.model)}</small></div></td><td><div class="hbar"><div class="t"><i style="width:${h}%;background:${hcol(h)}"></i></div><span class="num" style="font-weight:600">${h}</span></div></td><td>${spark(c.hist.slice(-40), hcol(h))}</td><td class="num mono">${t.kw.toFixed(1)} kW</td><td><span class="pill ${s.k}">${esc(s.t)}</span></td></tr>`; }).join("") : `<tr><td colspan="7"><div class="empty"><b>No chargers match</b>Clear the search or change the filters.</div></td></tr>`}
+  </tbody></table></div></div>`;
+};
+bind.chargers = () => {
+  $("#q").oninput = e => { S.filter.q = e.target.value; render(); };
+  $("#fs").onchange = e => { S.filter.site = e.target.value; render(); };
+  $("#fst").onchange = e => { S.filter.st = e.target.value; render(); };
+  $("#expCh").onclick = () => exportCsv("pulseguard-chargers.csv", [["Charger", "Site", "Brand", "Model", "kW", "OCPP", "Health", "Status", "Watched component"], ...F.chargers.map(c => [c.id, siteOf(c).name, c.brand, c.model, c.kw, c.fw, health(c), stateOf(c).t, COMP[c.comp].label])]);
+};
+
+V.alerts = () => {
+  const al = alerts(), acked = S.ws.acked || {}, act = al.filter(a => !acked[a.id]), ack = al.filter(a => acked[a.id]);
+  const row = (a, isAck) => { const C = COMP[a.comp]; return `<div class="list-i"><span class="dotc" style="background:${sc(a.sev)}"></span><div class="body"><b>${esc(a.title)}</b><small>${esc(a.detail)}</small><small>Planned fix: ${esc(C.part)} ${inr(C.cost)} · avoids ${esc(C.avoidedWhat.toLowerCase())} worth ~${inr(C.avoided)}</small></div><div class="acts"><button class="btn sm" data-open="${esc(a.c.id)}">Inspect</button>${isAck ? "" : `<button class="btn sm" data-ack="${esc(a.id)}">Acknowledge</button>`}<button class="btn sm primary" data-dispatch="${esc(a.c.id)}">Dispatch</button></div></div>`; };
+  return `<div class="ph"><div><h1>Alerts</h1><p>Predictions and faults without a work order. An alert clears as soon as a technician is dispatched.</p></div></div>
+  <div class="g3">
+    <div class="kpi"><div class="l">Critical</div><div class="v num c-crit">${al.filter(a => a.sev === "crit").length}</div><div class="d">failure predicted or offline</div></div>
+    <div class="kpi"><div class="l">Warnings</div><div class="v num c-warn">${al.filter(a => a.sev === "warn").length}</div><div class="d">component degrading</div></div>
+    <div class="kpi"><div class="l">Repair cost at risk</div><div class="v num">${inrK(al.reduce((s, a) => s + COMP[a.comp].avoided, 0))}</div><div class="d">if these fail before repair</div></div>
+  </div>
+  <div class="box"><div class="box-h"><h2>Open</h2><small>${act.length}</small></div>${act.length ? act.map(a => row(a, false)).join("") : `<div class="empty"><b>No open alerts</b>New predictions appear here as soon as a charger starts to drift.</div>`}</div>
+  ${ack.length ? `<div class="box"><div class="box-h"><h2>Acknowledged</h2><small>${ack.length}</small></div>${ack.map(a => row(a, true)).join("")}</div>` : ""}`;
+};
+bind.alerts = () => { $$("[data-ack]").forEach(b => b.onclick = async () => { S.ws.acked = { ...(S.ws.acked || {}), [b.dataset.ack]: Date.now() }; render(); if (!S.demo) { try { await Store.patch({ acked: S.ws.acked }); } catch { toast("Couldn't save the acknowledgement. Try again."); return; } } toast("Alert acknowledged"); }); };
+
+V.orders = () => {
+  const res = S.orders.filter(o => o.status === "resolved");
+  const cols = STAGES.map(([k, l]) => { const items = S.orders.filter(o => o.status === k); return `<div class="col"><div class="col-h"><span>${l}</span><span class="pill plain">${items.length}</span></div>${items.map(woCard).join("") || `<div class="help" style="padding:6px">Nothing here</div>`}</div>`; }).join("");
+  return `<div class="ph"><div><h1>Work orders</h1><p>${S.orders.length} total · ${S.orders.length - res.length} open · ${inrK(res.reduce((a, o) => a + Math.max(0, (o.avoided || 0) - (o.partCost || 0)), 0))} saved on resolved orders</p></div><div class="acts"><button class="btn" id="expWo">${I.dl}Export CSV</button><button class="btn primary" id="woNew">New work order</button></div></div>
+  ${S.orders.length ? `<div class="kanban">${cols}</div>` : `<div class="box"><div class="empty"><b>No work orders yet</b>Open Alerts and dispatch a technician to any charger with a predicted failure. Orders sync here live across your devices.<div style="margin-top:14px"><button class="btn primary" data-v2="alerts">Go to alerts</button></div></div></div>`}`;
+};
+function woCard(o){
+  const i = STAGES.findIndex(s => s[0] === o.status), next = STAGES[i + 1];
+  return `<div class="wo"><div class="top"><span>WO-${esc(o.num)}</span><span>${ago(o.createdAt)}</span></div><b>${esc(o.part)} · ${esc(o.chargerId)}</b><div class="meta"><span>${esc(o.site)}</span><span>Slot ${esc(o.slot)}</span><span>${esc(o.tech)}</span><span class="pill ${o.priority === "Urgent" ? "crit" : o.priority === "High" ? "warn" : ""} plain" style="height:18px;font-size:11px">${esc(o.priority)}</span></div><div class="meta"><span>Part ${inr(o.partCost || 0)}</span>${o.avoided ? `<span class="c-good">Avoids ${inrK(o.avoided)}</span>` : ""}</div>${o.notes ? `<div class="meta">“${esc(o.notes)}”</div>` : ""}${next && !S.demo ? `<div class="acts"><button class="btn sm${next[0] === "resolved" ? " primary" : ""}" data-adv="${esc(o.id)}" data-to="${next[0]}">${next[0] === "resolved" ? "Mark resolved" : "Move to " + next[1].toLowerCase()}</button></div>` : ""}</div>`;
+}
+bind.orders = () => {
+  $("#woNew").onclick = () => woModal();
+  $("#expWo").onclick = () => exportCsv("pulseguard-work-orders.csv", [["Work order", "Charger", "Site", "Part", "Part cost (INR)", "Cost avoided (INR)", "Priority", "Slot", "Technician", "Status", "Created", "Resolved"], ...S.orders.map(o => ["WO-" + o.num, o.chargerId, o.site, o.part, o.partCost, o.avoided || 0, o.priority, o.slot, o.tech, stageLabel(o.status), new Date(o.createdAt).toISOString(), o.resolvedAt ? new Date(o.resolvedAt).toISOString() : ""])]);
+  $$("[data-adv]").forEach(b => b.onclick = async () => { b.disabled = true; const part = { status: b.dataset.to, updatedAt: Date.now() }; if (b.dataset.to === "resolved") part.resolvedAt = Date.now(); try { await Store.setOrder(b.dataset.adv, part); toast(b.dataset.to === "resolved" ? "Resolved · charger health restored" : "Work order updated"); } catch { b.disabled = false; toast("Couldn't update the work order. Try again."); } });
+};
+
+V.dispatch = () => {
+  const open = S.orders.filter(o => o.status !== "resolved");
+  return `<div class="ph"><div><h1>Dispatch</h1><p>Certified technicians assigned to your network for the pilot · sample roster</p></div></div>
+  <div class="g2">
+    <div class="box"><div class="box-h"><h2>Technicians</h2><small>${TECHS.length} on roster</small></div><div class="scroll-x"><table class="tbl" style="min-width:560px"><thead><tr><th>Technician</th><th>Certification</th><th>Base</th><th>Status</th><th>Jobs</th></tr></thead><tbody>
+    ${TECHS.map(([n, s], i) => { const jobs = S.orders.filter(o => o.tech === n), act = jobs.filter(o => o.status !== "resolved"); const st = act.some(o => o.status === "inprogress") ? ["info", "On site"] : act.some(o => o.status === "enroute") ? ["warn", "En route"] : act.length ? ["brand", "Scheduled"] : ["good", "Available"]; return `<tr><td><div style="display:flex;gap:10px;align-items:center"><div class="ava" style="width:30px;height:30px;font-size:11.5px">${n.split(" ").map(x => x[0]).join("")}</div><b style="font-weight:500">${esc(n)}</b></div></td><td class="muted">${esc(s)}</td><td>${esc(F.sites[i % F.sites.length].name)}</td><td><span class="pill ${st[0]}">${st[1]}</span></td><td class="num">${jobs.length}</td></tr>`; }).join("")}
+    </tbody></table></div></div>
+    <div class="box"><div class="box-h"><h2>Tonight's schedule</h2><small>Off-peak window 02:00–05:00</small></div>
+      ${open.length ? open.map(o => `<div class="list-i"><span class="dotc" style="background:var(--info)"></span><div class="body"><b>${esc(o.slot)} · ${esc(o.chargerId)}</b><small>${esc(o.part)} · ${esc(o.tech)} · ${esc(o.site)}</small></div><span class="pill info">${stageLabel(o.status)}</span></div>`).join("") : `<div class="empty"><b>Nothing scheduled</b>Dispatched work orders appear here with their slot and technician.</div>`}
+    </div>
+  </div>
+  <div class="box"><div class="box-h"><div><h2>Spare parts on hand</h2><small>Stocked per city cluster so the first visit fixes the fault · sample stock</small></div></div><div class="scroll-x"><table class="tbl" style="min-width:560px"><thead><tr><th>Part</th><th>Fits</th><th class="r">Unit cost</th><th class="r">In stock</th><th class="r">Reserved</th></tr></thead><tbody>
+    ${Object.entries(COMP).map(([k, C], i) => { const res = S.orders.filter(o => o.comp === k && o.status !== "resolved").length; return `<tr><td><b style="font-weight:500">${esc(C.part)}</b></td><td class="muted">${esc(C.label)} · all OCPP models</td><td class="r num">${inr(C.cost)}</td><td class="r num">${[14, 22, 6, 9][i]}</td><td class="r num">${res ? `<span class="pill warn plain">${res}</span>` : "0"}</td></tr>`; }).join("")}
+  </tbody></table></div></div>`;
+};
+
+V.sites = () => `<div class="ph"><div><h1>Sites</h1><p>${F.sites.length} site${F.sites.length === 1 ? "" : "s"} in ${esc(F.cityName)} · select a charger to inspect it</p></div></div>
+  <div class="g3">${F.sites.map(s => { const cs = F.chargers.filter(c => c.site === s.id), on = cs.filter(c => !c.down).length, avg = Math.round(cs.reduce((a, c) => a + health(c), 0) / cs.length), risk = cs.filter(c => stateOf(c).k === "crit").length; return `<div class="box"><div class="box-h"><div><h2>${esc(s.name)}</h2><small>${s.kind} · ${cs.length} guns · ${cs.reduce((a, c) => a + c.kw, 0)} kW installed</small></div><span class="pill ${risk ? "crit" : avg >= 80 ? "good" : "warn"}">${risk ? risk + " at risk" : avg >= 80 ? "Healthy" : "Watch"}</span></div><div class="box-b" style="display:flex;flex-direction:column;gap:14px"><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px"><div><div class="muted" style="font-size:12px">Online</div><div class="num" style="font-weight:600;font-size:18px">${on}/${cs.length}</div></div><div><div class="muted" style="font-size:12px">Avg health</div><div class="num" style="font-weight:600;font-size:18px">${avg}</div></div><div><div class="muted" style="font-size:12px">Sessions/day</div><div class="num" style="font-weight:600;font-size:18px">${cs.reduce((a, c) => a + c.sessions, 0)}</div></div></div><div class="hm" role="group" aria-label="Chargers at ${esc(s.name)}">${cs.map(c => { const k = stateOf(c).k; return `<button data-open="${esc(c.id)}" title="${esc(c.id)} · health ${health(c)}" aria-label="${esc(c.id)}, health ${health(c)}" style="background:var(--${k}-soft);color:var(--${k})">${health(c)}</button>`; }).join("")}</div></div></div>`; }).join("")}</div>`;
+
+V.reports = () => {
+  const d = F.days, after = d.slice(7), before = d.slice(0, 7), avg = a => a.reduce((s, x) => s + x.up, 0) / a.length;
+  const byComp = Object.entries(COMP).map(([k, C]) => ({ l: C.label, v: S.orders.filter(o => o.comp === k).length + F.chargers.filter(c => c.comp === k && health(c) < 80).length }));
+  const siteUp = F.sites.map(s => { const cs = F.chargers.filter(c => c.site === s.id); return { s, cs, u: Math.min(99.95, avg(after) + (cs.filter(c => !c.down).length / cs.length - 1) * 4 + (hash(s.name) % 10) / 20 - .2) }; });
+  const p = planOf(S.ws.plan), m = metrics();
+  return `<div class="ph"><div><h1>Reports</h1><p>SLA and impact reporting for your board, investors and site owners · sample history</p></div><div class="acts"><button class="btn" id="expSla">${I.dl}Export SLA report</button></div></div>
+  <div class="kpis">
+    <div class="kpi"><div class="l">Uptime before PulseGuard</div><div class="v num">${pct(avg(before), 2)}</div><div class="d">first 7 days</div></div>
+    <div class="kpi"><div class="l">Uptime after</div><div class="v num c-good">${pct(avg(after), 2)}</div><div class="d c-good">+${(avg(after) - avg(before)).toFixed(1)} percentage points</div></div>
+    <div class="kpi"><div class="l">Unplanned failures</div><div class="v num">${before.reduce((a, x) => a + x.fails, 0)} → ${after.reduce((a, x) => a + x.fails, 0)}</div><div class="d">before → after go-live</div></div>
+    <div class="kpi"><div class="l">Savings vs. fee</div><div class="v num">${inrK(m.saved)}</div><div class="d">against ${inrK(p.fee * S.ws.chargers)} monthly fee after pilot</div></div>
+  </div>
+  <div class="g2e">
+    <div class="box"><div class="box-h"><div><h2>SLA by site</h2><small>Target 98.0% · current month</small></div></div><div class="scroll-x"><table class="tbl"><thead><tr><th>Site</th><th class="r">Guns</th><th class="r">Uptime</th><th>SLA</th></tr></thead><tbody>${siteUp.map(r => `<tr><td>${esc(r.s.name)}</td><td class="r num">${r.cs.length}</td><td class="r num">${pct(r.u, 2)}</td><td><span class="pill ${r.u >= 98 ? "good" : "crit"}">${r.u >= 98 ? "Met" : "Missed"}</span></td></tr>`).join("")}</tbody></table></div></div>
+    <div class="box"><div class="box-h"><div><h2>Faults by component</h2><small>Predicted and repaired this period</small></div></div><div class="box-b chart">${barChart({ items: byComp })}</div></div>
+  </div>
+  <div class="box"><div class="box-h"><div><h2>Unplanned failures vs. failures prevented, per day</h2><small>The dashed line marks predictive maintenance going live</small></div><div class="legend"><span><i style="background:var(--crit)"></i>Unplanned failures</span><span><i style="background:var(--good)"></i>Prevented</span></div></div><div class="box-b chart">${lineChart({ series: [{ values: d.map(x => x.fails), color: "var(--crit)" }, { values: d.map(x => x.prevented), color: "var(--good)" }], labels: d.map(x => dShort(x.t)), yMin: 0, yMax: 4, ticks: 4, yFmt: v => v.toFixed(0), h: 200, mark: { i: 7, label: "Go-live" } })}</div></div>`;
+};
+bind.reports = () => { $("#expSla").onclick = () => exportCsv("pulseguard-sla-report.csv", [["Date", "Network uptime %", "Unplanned failures", "Failures prevented"], ...F.days.map(x => [new Date(x.t).toISOString().slice(0, 10), x.up.toFixed(2), x.fails, x.prevented])]); };
+
+V.billing = () => {
+  const p = planOf(S.ws.plan), n = S.ws.chargers, monthly = p.fee * n, ends = S.ws.pilotEnds || Date.now(), daysLeft = Math.max(0, Math.ceil((ends - Date.now()) / 864e5));
+  const months = [0, 1, 2].map(i => { const dt = new Date(ends); dt.setMonth(dt.getMonth() + i); return dt; });
+  return `<div class="ph"><div><h1>Billing</h1><p>Plan, usage and invoices</p></div></div>
+  <div class="g2">
+    <div class="box"><div class="box-h"><div><h2>${esc(p.name)} plan</h2><small>${esc(p.blurb)}</small></div><span class="pill brand">Pilot · ${daysLeft} days left</span></div><div class="box-b" style="display:flex;flex-direction:column;gap:16px">
+      <dl class="kv"><dt>Price</dt><dd class="num">${inr(p.fee)} per DC gun per month</dd><dt>Guns</dt><dd class="num">${n.toLocaleString("en-IN")}</dd><dt>After pilot</dt><dd class="num"><b>${inr(monthly)}</b> a month + GST</dd><dt>Pilot ends</dt><dd>${new Date(ends).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}</dd></dl>
+      <div><span class="lbl">Change plan</span><div class="segc" role="group" aria-label="Change plan" id="planSeg">${PLANS.map(x => `<button data-p="${x.name}" aria-pressed="${x.name === p.name}">${x.name} · ${inr(x.fee)}</button>`).join("")}</div></div>
+      <p class="help" style="margin:0">Plan changes apply from your next billing month. The pilot is free; no card is charged.</p>
+    </div></div>
+    <div class="box"><div class="box-h"><h2>Payment</h2></div><div class="box-b" style="display:flex;flex-direction:column;gap:12px"><p class="ink2">Nothing to pay during the pilot. Before it ends, our team sets up invoicing with your finance contact by NEFT or RTGS on 30-day terms.</p><dl class="kv"><dt>Billing email</dt><dd>${esc(S.ws.billingEmail || "Not set")}</dd><dt>GSTIN</dt><dd>${esc(S.ws.gstin || "Not set")}</dd></dl><div><button class="btn" data-v2="settings">Add billing details</button></div></div></div>
+  </div>
+  <div class="box"><div class="box-h"><h2>Upcoming invoices</h2><small>Estimated from your current plan</small></div><div class="scroll-x"><table class="tbl" style="min-width:640px"><thead><tr><th>Period</th><th>Description</th><th class="r">Amount</th><th class="r">GST 18%</th><th class="r">Total</th><th>Status</th></tr></thead><tbody>
+    <tr><td>Pilot</td><td>30-day pilot · ${n.toLocaleString("en-IN")} guns</td><td class="r num">₹0</td><td class="r num">₹0</td><td class="r num">₹0</td><td><span class="pill good">Free</span></td></tr>
+    ${months.map(dt => `<tr><td>${dt.toLocaleDateString("en-IN", { month: "short", year: "numeric" })}</td><td>${esc(p.name)} · ${n.toLocaleString("en-IN")} guns × ${inr(p.fee)}</td><td class="r num">${inr(monthly)}</td><td class="r num">${inr(monthly * .18)}</td><td class="r num"><b>${inr(monthly * 1.18)}</b></td><td><span class="pill plain">Upcoming</span></td></tr>`).join("")}
+  </tbody></table></div></div>`;
+};
+bind.billing = () => { $$("#planSeg button").forEach(b => b.onclick = async () => { if (b.dataset.p === S.ws.plan) return; const prev = S.ws.plan; S.ws.plan = b.dataset.p; $("#wsPlan").textContent = `${S.ws.plan} · ${S.demo ? "demo" : "pilot"}`; render(); if (!S.demo) { try { await Store.patch({ plan: S.ws.plan }); if (Store.cloud()) cap.db.doc(`accounts/${cap.uid}`).update({ plan: S.ws.plan }).catch(() => {}); } catch { S.ws.plan = prev; render(); toast("Couldn't change the plan. Try again."); return; } } toast(`Switched to ${S.ws.plan}`); }); };
+
+const INT = {
+  ocpp: () => `<p class="ink2">Point each charger's central system URL at your PulseGuard endpoint. Most OEM portals support a secondary backend, so your existing CMS keeps working.</p><div class="codebox">Central system URL   wss://&lt;endpoint issued at pilot kickoff&gt;/ocpp/{chargePointId}
+Protocol             OCPP 1.6J or 2.0.1
+Messages used        StatusNotification, MeterValues, DiagnosticsStatus,
+                     FirmwareStatus, Heartbeat (60 s)
+Security profile     2 (TLS + basic auth)</div><p class="help" style="margin:0">Your endpoint and credentials are issued by the PulseGuard team at pilot kickoff.</p>`,
+  kit: () => `<p class="ink2">For chargers without OCPP, we fit a non-invasive kit: a clamp-on current sensor, two temperature probes and a fan tachometer on a 4G module. Fitting takes about 40 minutes per charger and does not touch the power electronics.</p><dl class="kv"><dt>Price</dt><dd>₹8,000 per charger, one time</dd><dt>Reads</dt><dd>Cabinet temperature, fan RPM, input current, door state</dd><dt>Connectivity</dt><dd>4G with a 7-day local buffer</dd></dl>`,
+  api: () => `<p class="ink2">Already on a charging management platform? PulseGuard plugs in as its prediction and service layer, so your billing and driver app stay the same.</p><dl class="kv"><dt>How</dt><dd>OCPP proxy, or your CMS's webhook export</dd><dt>Setup</dt><dd>Usually one call with your CMS vendor</dd></dl>`
+};
+V.settings = () => {
+  const w = S.ws, nt = w.notify || {};
+  return `<div class="ph"><div><h1>Settings</h1><p>Company, notifications, integrations and team</p></div></div>
+  <div class="g2e">
+    <div class="box"><div class="box-h"><h2>Company</h2></div><form class="box-b fgrid" id="coForm" novalidate>
+      <div class="full"><label class="lbl" for="sCo">Company name</label><input class="inp" id="sCo" value="${esc(w.company)}"></div>
+      <div><label class="lbl" for="sSeg">Network type</label><select class="inp" id="sSeg">${["Fleet depot", "Charge point operator", "Fuel retail chargers", "Real estate / destination"].map(r => `<option${r === w.segment ? " selected" : ""}>${r}</option>`).join("")}</select></div>
+      <div><label class="lbl" for="sN">DC guns</label><input class="inp" id="sN" type="number" min="4" value="${w.chargers}"></div>
+      <div><label class="lbl" for="sBill">Billing email</label><input class="inp" id="sBill" type="email" value="${esc(w.billingEmail || "")}" placeholder="finance@company.com"></div>
+      <div><label class="lbl" for="sGst">GSTIN</label><input class="inp" id="sGst" value="${esc(w.gstin || "")}" placeholder="29ABCDE1234F1Z5"></div>
+      <div class="full"><button class="btn primary">Save changes</button></div>
+    </form></div>
+    <div class="box"><div class="box-h"><h2>Notifications</h2><small>Where predictions are sent</small></div><div class="box-b" style="padding-top:4px;padding-bottom:4px">
+      ${[["email", "Email", "Critical predictions and a daily digest"], ["whatsapp", "WhatsApp", "Critical predictions to the on-call number"], ["sms", "SMS", "Fallback when WhatsApp is unreachable"], ["weekly", "Weekly SLA summary", "Every Monday at 9:00 IST"]].map(([k, l, s]) => `<label class="toggle"><span><b style="font-weight:500">${l}</b><small>${s}</small></span><input type="checkbox" class="sw" data-n="${k}"${nt[k] ? " checked" : ""}></label>`).join("")}
+    </div></div>
+  </div>
+  <div class="box"><div class="box-h"><div><h2>Integrations</h2><small>Connect chargers so live telemetry replaces the pilot feed</small></div><span class="pill warn">Pilot feed active</span></div><div class="box-b" style="display:flex;flex-direction:column;gap:14px">
+    <div class="tabs-u" role="tablist" id="intTabs"><button role="tab" aria-selected="true" data-i="ocpp">OCPP backend</button><button role="tab" aria-selected="false" data-i="kit">Sensor kit</button><button role="tab" aria-selected="false" data-i="api">CMS partner</button></div>
+    <div id="intBody"></div>
+  </div></div>
+  <div class="box"><div class="box-h"><h2>Team</h2><small>Team invites arrive with the production release</small></div><div class="scroll-x"><table class="tbl"><thead><tr><th>Member</th><th>Role</th><th>Access</th></tr></thead><tbody><tr><td>${esc(S.demo ? "Demo user" : cap.me?.name || "You")}</td><td>${esc(w.role)}</td><td><span class="pill brand plain">Admin</span></td></tr></tbody></table></div></div>`;
+};
+bind.settings = () => {
+  const setInt = k => { $$("#intTabs button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.i === k))); $("#intBody").innerHTML = INT[k](); };
+  $$("#intTabs button").forEach(b => b.onclick = () => setInt(b.dataset.i)); setInt("ocpp");
+  $("#coForm").onsubmit = async e => {
+    e.preventDefault(); const co = $("#sCo").value.trim(); if (!co) { toast("Company name can't be empty."); return; }
+    const part = { company: co.slice(0, 80), segment: $("#sSeg").value, chargers: Math.max(4, Math.round(+$("#sN").value) || S.ws.chargers), billingEmail: $("#sBill").value.trim().slice(0, 120), gstin: $("#sGst").value.trim().toUpperCase().slice(0, 15) };
+    if (!S.demo) { try { await Store.patch(part); if (Store.cloud()) cap.db.doc(`accounts/${cap.uid}`).update({ company: part.company, segment: part.segment, chargers: part.chargers }).catch(() => {}); } catch { toast("Couldn't save. Try again."); return; } }
+    Object.assign(S.ws, part); $("#wsName").textContent = S.ws.company; $("#wsMark").textContent = (S.ws.company[0] || "P").toUpperCase();
+    document.activeElement?.blur(); toast("Settings saved"); render();
+  };
+  $$("[data-n]").forEach(sw => sw.onchange = async () => { const prev = S.ws.notify || {}; S.ws.notify = { ...prev, [sw.dataset.n]: sw.checked }; if (!S.demo) { try { await Store.patch({ notify: S.ws.notify }); } catch { S.ws.notify = prev; sw.checked = !sw.checked; toast("Couldn't save. Try again."); return; } } toast("Notification preference saved"); });
+};
+
+const LSTAGES = ["New", "Contacted", "Pilot scoping", "Pilot live", "Won", "Lost"];
+V.admin = () => {
+  const L = S.leads, A = S.accounts, by = st => L.filter(l => (l.stage || "New") === st).length;
+  const pipeGuns = L.filter(l => l.stage !== "Lost").reduce((a, l) => a + (+l.chargers || 0), 0);
+  const arr = A.reduce((a, x) => a + planOf(x.plan).fee * (x.chargers || 0) * 12, 0);
+  return `<div class="ph"><div><h1>Growth</h1><p>Founder view · only the owner of this app sees this page</p></div><div class="acts"><button class="btn" id="expLeads">${I.dl}Export pipeline</button></div></div>
+  <div class="kpis">
+    <div class="kpi"><div class="l">Pilot applications</div><div class="v num">${L.length}</div><div class="d">${by("New")} new · ${by("Pilot live")} live · ${by("Won")} won</div></div>
+    <div class="kpi"><div class="l">Workspaces created</div><div class="v num">${A.length}</div><div class="d">self-serve sign-ups</div></div>
+    <div class="kpi"><div class="l">Guns in pipeline</div><div class="v num">${pipeGuns.toLocaleString("en-IN")}</div><div class="d">excluding lost deals</div></div>
+    <div class="kpi"><div class="l">Potential ARR</div><div class="v num">${inrK(arr)}</div><div class="d">if every workspace converts</div></div>
+  </div>
+  <div class="tabs-u" role="tablist" id="adTabs"><button role="tab" data-a="pipeline" aria-selected="${S.adminTab === "pipeline"}">Pilot pipeline</button><button role="tab" data-a="accounts" aria-selected="${S.adminTab === "accounts"}">Workspaces</button></div>
+  ${S.adminTab === "pipeline" ? `<div class="box"><div class="scroll-x"><table class="tbl" style="min-width:900px"><thead><tr><th>Received</th><th>Company</th><th>Contact</th><th>Network</th><th>Note</th><th>Stage</th></tr></thead><tbody>
+    ${L.length ? L.map(l => `<tr><td class="muted">${dtShort(l.createdAt)}</td><td><b style="font-weight:500">${esc(l.company)}</b></td><td><div class="idc"><b style="font-family:var(--f);font-weight:400">${esc(l.contact)}</b><small>${esc(l.email)}${l.phone ? " · " + esc(l.phone) : ""}</small></div></td><td>${esc(l.chargers)} DC · ${esc(l.segment)}</td><td class="muted" style="max-width:260px">${esc(l.note || "—")}</td><td><select class="inp" style="height:30px;font-size:12.5px;width:auto" data-stage="${esc(l.id)}" aria-label="Stage for ${esc(l.company)}">${LSTAGES.map(s => `<option${(l.stage || "New") === s ? " selected" : ""}>${s}</option>`).join("")}</select></td></tr>`).join("") : `<tr><td colspan="6"><div class="empty"><b>No applications yet</b>Pilot applications from the website appear here live. Share the page with operators to start the pipeline.</div></td></tr>`}
+  </tbody></table></div></div>` : `<div class="box"><div class="scroll-x"><table class="tbl" style="min-width:760px"><thead><tr><th>Created</th><th>Company</th><th>Network</th><th>City</th><th class="r">Guns</th><th>Plan</th><th class="r">Monthly value</th></tr></thead><tbody>
+    ${A.length ? A.map(a => `<tr><td class="muted">${dtShort(a.createdAt)}</td><td><b style="font-weight:500">${esc(a.company)}</b><div class="help" style="margin:0">${esc(a.role || "")}</div></td><td>${esc(a.segment)}</td><td>${esc((CITIES[a.city] || [a.city])[0])}</td><td class="r num">${esc(a.chargers)}</td><td><span class="pill brand plain">${esc(a.plan)}</span></td><td class="r num">${inr(planOf(a.plan).fee * (a.chargers || 0))}</td></tr>`).join("") : `<tr><td colspan="7"><div class="empty"><b>No workspaces yet</b>Each sign-up appears here as soon as onboarding finishes.</div></td></tr>`}
+  </tbody></table></div></div>`}`;
+};
+bind.admin = () => {
+  $$("#adTabs button").forEach(b => b.onclick = () => { S.adminTab = b.dataset.a; render(); });
+  $$("[data-stage]").forEach(s => s.onchange = async () => { try { await cap.db.doc(`leads/${s.dataset.stage}`).update({ stage: s.value, stageAt: Date.now() }); toast("Stage updated"); } catch { toast("Couldn't update the stage. Try again."); } });
+  $("#expLeads").onclick = () => exportCsv("pulseguard-pilot-pipeline.csv", [["Received", "Company", "Contact", "Email", "Phone", "Network", "DC guns", "Stage", "Note"], ...S.leads.map(l => [new Date(l.createdAt).toISOString(), l.company, l.contact, l.email, l.phone || "", l.segment, l.chargers, l.stage || "New", l.note || ""])]);
+};
+
+/* ---------- charger drawer ---------- */
+function closeOverlay(){ $("#overlay").innerHTML = ""; if (S) S.sel = null; }
+function openCharger(id){
+  S.sel = id;
+  $("#overlay").innerHTML = `<div class="drawer-scrim" id="dsc"></div><aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="dTitle"><div class="drawer-h"><div style="flex:1;min-width:0"><div class="help" style="margin:0" id="dSub"></div><h2 id="dTitle" class="mono" style="font-size:17px;font-weight:500">${esc(id)}</h2></div><button class="btn quiet sm" id="dClose" aria-label="Close">${I.x}</button></div><div class="drawer-b" id="drawerBody"></div></aside>`;
+  $("#dsc").onclick = closeOverlay; $("#dClose").onclick = closeOverlay; $("#dClose").focus();
+  drawerBody();
+}
+document.addEventListener("keydown", e => { if (e.key !== "Escape") return; const m = $(".modal-scrim"); if (m) m.remove(); else if ($("#overlay").innerHTML) closeOverlay(); });
+function drawerBody(){
+  const c = F.chargers.find(x => x.id === S.sel); if (!c) return;
+  const C = COMP[c.comp], t = c.tele[c.tele.length - 1], h = health(c), s = stateOf(c), o = orderFor(c.id);
+  $("#dSub").textContent = `${siteOf(c).name} · ${c.brand} ${c.model} · ${c.kw} kW · OCPP ${c.fw}`;
+  const g = (l, v, u, k) => `<div class="box"><div class="l">${l}</div><div class="v num ${k ? "c-" + k : ""}">${v}<span class="muted" style="font-size:12px"> ${u}</span></div></div>`;
+  const tk = t.temp > 52 ? "crit" : t.temp > 46 ? "warn" : "", fk = t.rpm < 2600 ? "crit" : t.rpm < 3100 ? "warn" : "", rk = t.res > 3.2 ? "crit" : t.res > 2.5 ? "warn" : "", dk = t.drift > 8 ? "crit" : t.drift > 4 ? "warn" : "";
+  const sig = c.comp === "fan" ? ["Fan speed, RPM", c.tele.map(x => x.rpm), v => Math.round(v).toLocaleString("en-IN")] : c.comp === "connector" ? ["Cable resistance, mΩ", c.tele.map(x => x.res), v => v.toFixed(2)] : c.comp === "contactor" ? ["Contactor drift, °C", c.tele.map(x => x.drift), v => v.toFixed(1)] : ["OCPP heartbeat interval, s", c.tele.map(x => x.hb), v => Math.round(v)];
+  const warnTxt = c.down ? `${C.label} failed.` : h < 55 ? `${C.label} failure predicted in about ${hoursLeft(c)} hours.` : `${C.label} is degrading.`;
+  $("#drawerBody").innerHTML = `
+    <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap"><div><div class="muted" style="font-size:12.5px">Health score</div><div class="num" style="font-size:34px;font-weight:600;letter-spacing:-.03em;color:${hcol(h)}">${h}</div></div><span class="pill ${s.k}">${esc(s.t)}</span><span class="flex1"></span>${o ? `<button class="btn" data-v2="orders">View WO-${esc(o.num)}</button>` : `<button class="btn primary" id="dDisp">${c.down ? "Book emergency repair" : "Dispatch technician"}</button>`}</div>
+    ${h < 80 && !o ? `<div class="alert ${h < 55 ? "err" : "warnb"}"><b>${esc(warnTxt)}</b> ${esc(C.signal)}. Planned fix: ${esc(C.part)} for ${inr(C.cost)}, which avoids a ${esc(C.avoidedWhat.toLowerCase())} worth about ${inr(C.avoided)}.</div>` : ""}
+    <div class="tele">${g("Cabinet temp", t.temp.toFixed(1), "°C", tk)}${g("Fan speed", Math.round(t.rpm).toLocaleString("en-IN"), "RPM", fk)}${g("Cable resistance", t.res.toFixed(2), "mΩ", rk)}${g("Contactor drift", t.drift.toFixed(1), "°C", dk)}${g("Output now", t.kw.toFixed(1), "kW", "")}${g("Heartbeat", t.hb, "s", t.hb > 120 ? "warn" : "")}</div>
+    <div class="box"><div class="box-h"><div><h2>${sig[0]}</h2><small>Watched signal for the ${esc(C.label.toLowerCase())} · last ${Math.round(c.tele.length * 2 / 60)} min, live</small></div></div><div class="box-b chart">${lineChart({ series: [{ values: sig[1], color: "var(--brand)", area: true }], w: 520, h: 170, yFmt: sig[2], pad: { l: 52, r: 12, t: 12, b: 10 } })}</div></div>
+    <div class="box"><div class="box-h"><h2>Health score</h2><small>live</small></div><div class="box-b chart">${lineChart({ series: [{ values: c.hist, color: hcol(h), area: true }], w: 520, h: 120, yMin: 0, yMax: 100, ticks: 2, yFmt: v => v.toFixed(0), pad: { l: 32, r: 12, t: 8, b: 8 } })}</div></div>
+    <div class="box"><div class="box-h"><h2>Asset</h2></div><div class="box-b"><dl class="kv"><dt>Charger ID</dt><dd class="mono">${esc(c.id)}</dd><dt>Model</dt><dd>${esc(c.brand)} ${esc(c.model)} · ${c.kw} kW · CCS2</dd><dt>Commissioned</dt><dd>${c.installed}</dd><dt>Protocol</dt><dd>OCPP ${c.fw}</dd><dt>Sessions per day</dt><dd>${c.sessions}</dd><dt>Watched component</dt><dd>${esc(C.label)}</dd></dl></div></div>`;
+  const b = $("#dDisp"); if (b) b.onclick = () => woModal(c.id);
+  $$("#drawerBody [data-v2]").forEach(x => x.onclick = () => go(x.dataset.v2));
+}
+
+/* ---------- work order modal ---------- */
+function woModal(cid){
+  if (!S) return;
+  const pre = (cid && F.chargers.find(c => c.id === cid)) || alerts()[0]?.c || F.chargers[0];
+  const freeTech = TECHS.find(([n]) => !S.orders.some(o => o.tech === n && o.status !== "resolved")) || TECHS[0];
+  $$(".modal-scrim").forEach(x => x.remove());
+  const m = document.createElement("div"); m.className = "modal-scrim";
+  m.innerHTML = `<div class="modal" role="dialog" aria-modal="true" aria-labelledby="woT"><div class="modal-h"><h2 id="woT" style="font-size:16px">New work order</h2><button class="btn quiet sm" id="woX" aria-label="Close">${I.x}</button></div><form id="woF" novalidate><div class="modal-b fgrid">
+    <div class="full"><label class="lbl" for="wC">Charger</label><select class="inp" id="wC">${F.chargers.map(c => `<option value="${esc(c.id)}"${c.id === pre.id ? " selected" : ""}${orderFor(c.id) ? " disabled" : ""}>${esc(c.id)} · ${esc(siteOf(c).name)} · health ${health(c)}${orderFor(c.id) ? " · has open order" : ""}</option>`).join("")}</select></div>
+    <div><label class="lbl" for="wP">Component</label><select class="inp" id="wP">${Object.entries(COMP).map(([k, C]) => `<option value="${k}"${k === pre.comp ? " selected" : ""}>${C.label}</option>`).join("")}</select></div>
+    <div><label class="lbl" for="wPr">Priority</label><select class="inp" id="wPr"><option>Urgent</option><option selected>High</option><option>Normal</option></select></div>
+    <div><label class="lbl" for="wS">Slot</label><select class="inp" id="wS"><option>02:30</option><option>03:30</option><option>04:30</option><option>ASAP</option><option>Next preventive visit</option></select></div>
+    <div><label class="lbl" for="wT">Technician</label><select class="inp" id="wT">${TECHS.map(([n, s]) => `<option value="${esc(n)}"${n === freeTech[0] ? " selected" : ""}>${esc(n)} · ${esc(s.split(" · ")[0])}</option>`).join("")}</select></div>
+    <div class="full alert note" id="wSum"></div>
+    <div class="full"><label class="lbl" for="wN">Notes for the technician</label><textarea class="inp" id="wN" rows="2" placeholder="Optional"></textarea></div>
+  </div><div class="modal-f"><button type="button" class="btn" id="woC">Cancel</button><button class="btn primary" id="woS">Create work order</button></div></form></div>`;
+  document.body.appendChild(m);
+  const close = () => m.remove();
+  $("#woX", m).onclick = close; $("#woC", m).onclick = close; m.addEventListener("click", e => { if (e.target === m) close(); });
+  const sum = () => { const c = F.chargers.find(x => x.id === $("#wC", m).value), C = COMP[$("#wP", m).value]; $("#wSum", m).innerHTML = c.down ? `<b>Emergency repair.</b> This charger has already failed; expect a full ${esc(C.avoidedWhat.toLowerCase())} replacement around ${inr(C.avoided)}.` : `<b>${esc(C.part)}</b> · part ${inr(C.cost)} · avoids a ${esc(C.avoidedWhat.toLowerCase())} worth about ${inr(C.avoided)}.`; if (c.down) $("#wS", m).value = "ASAP"; };
+  $("#wC", m).onchange = () => { const c = F.chargers.find(x => x.id === $("#wC", m).value); $("#wP", m).value = c.comp; sum(); }; $("#wP", m).onchange = sum; sum();
+  $("#wC", m).focus();
+  $("#woF", m).onsubmit = async e => {
+    e.preventDefault(); const btn = $("#woS", m); btn.disabled = true;
+    const c = F.chargers.find(x => x.id === $("#wC", m).value), comp = $("#wP", m).value, C = COMP[comp];
+    if (orderFor(c.id)) { toast(`${c.id} already has an open work order.`); btn.disabled = false; return; }
+    const num = Math.max(1000, ...S.orders.map(o => +o.num || 0)) + 1;
+    const o = { num, chargerId: c.id, site: siteOf(c).name, comp, part: c.down ? "Emergency repair · " + C.part : C.part, partCost: c.down ? C.avoided : C.cost, avoided: c.down ? 0 : C.avoided, priority: $("#wPr", m).value, slot: $("#wS", m).value, tech: $("#wT", m).value, notes: $("#wN", m).value.trim().slice(0, 400), status: "scheduled", createdAt: Date.now() };
+    if (S.demo) S.orders.unshift({ id: "D" + Date.now(), ...o });
+    else { try { await Store.addOrder(o); } catch { btn.disabled = false; toast("Couldn't create the work order. Try again."); return; } }
+    log("info", `WO-${num} created · ${o.part} · ${c.id} · ${o.tech} at ${o.slot}`);
+    close(); closeOverlay(); toast(`WO-${num} created · ${o.tech} assigned`); render();
+  };
+}
+
+/* ---------- export ---------- */
+async function exportCsv(name, rows){
+  const csv = rows.map(r => r.map(v => { const s = String(v ?? ""); return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s; }).join(",")).join("\n");
+  await settle(1500);
+  if (!cap.dl) { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" })); a.download = name; document.body.appendChild(a); a.click(); a.remove(); toast("Downloaded " + name); return; }
+  try { await cap.dl.save({ filename: name, data: new Blob([csv], { type: "text/csv" }) }); } catch { toast("Download cancelled"); }
+}
+
+/* ============================== lead form ============================== */
+$("#leadForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const m = $("#lMsg"), err = t => { m.hidden = false; m.className = "full alert err"; m.textContent = t; };
+  const co = $("#lCo").value.trim(), nm = $("#lName").value.trim(), em = $("#lEmail").value.trim();
+  if (!co || !nm || !em) return err("Add your company, name and work email so we can reply.");
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(em)) return err("That email address looks incomplete. Check it and submit again.");
+  const b = $("#lBtn"); b.disabled = true; b.textContent = "Submitting…";
+  await settle(3000);
+  const lead = { company: co.slice(0, 80), contact: nm.slice(0, 80), email: em.slice(0, 120), phone: $("#lPhone").value.trim().slice(0, 20), segment: $("#lSeg").value, chargers: Math.max(0, Math.round(+$("#lN").value) || 0), note: $("#lNote").value.trim().slice(0, 500), stage: "New", createdAt: Date.now() };
+  try {
+    if (!(cap.db && cap.uid)) throw 0;
+    await cap.db.doc(`leads/${cap.uid}`).set({ ...lead, by: cap.uid });
+    m.hidden = false; m.className = "full alert ok"; m.textContent = `Application received for ${lead.company}. We'll reply to ${lead.email} within two working days.`;
+  } catch {
+    LS.set("lead", lead); m.hidden = false; m.className = "full alert ok"; m.textContent = `Application received for ${lead.company}. (Prototype: stored in this browser only.)`;
+  }
+  b.disabled = false; b.textContent = "Submit application";
+});
+
+/* ============================== boot ============================== */
+renderMarketing(); roi();
+capReady.then(async () => { if (Store.cloud()) { const ws = await Store.load(); if (ws && ws.onboarded) $("#navLogin").textContent = "Open console"; } });
+})();
+</script>
+
+</body>
+</html>
